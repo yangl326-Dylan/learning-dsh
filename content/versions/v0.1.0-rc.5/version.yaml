@@ -1,0 +1,30 @@
+# Version manifest — v0.1.0-rc.5
+# Content contract: docs/contract/content-contract.md
+
+id: v0.1.0-rc.5
+label: 0.1.0-rc.5
+sourceRef:
+  type: commit
+  sha: abe560f81e
+status: complete
+releasedAt: 2026-08
+
+# Chapter references (id + order). Full chapter metadata lives in
+# chapters/<chapter-id>/chapter.yaml; the build pipeline aggregates.
+chapters:
+  - id: ch01-everything-is-a-plugin
+    order: 1
+  - id: ch02-profiles-and-bundles
+    order: 2
+  - id: ch03-core-packages
+    order: 3
+  - id: ch04-event-domains
+    order: 4
+  - id: ch05-turn-flow
+    order: 5
+  - id: ch06-session-log
+    order: 6
+  - id: ch07-capability-seams
+    order: 7
+  - id: ch08-extension-map
+    order: 8

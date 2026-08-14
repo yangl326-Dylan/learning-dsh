@@ -1,0 +1,67 @@
+# Chapter 05 — Turn Flow
+# Content contract: docs/contract/content-contract.md
+
+id: ch05-turn-flow
+order: 5
+title:
+  en: Turn Flow
+  zh: Turn 驱动循环
+summary:
+  en: How one model request plus its tool calls becomes a step, how steps compose into turns, and where the loop's extension points sit.
+  zh: 一次模型请求加上它的工具调用如何成为一个 step，step 如何组成 turn，以及循环的扩展点在哪里。
+topics:
+  - packages/core/agent-loop
+  - docs/agent-lifecycle.md
+  - docs/architecture.md
+diagrams:
+  - turn-flow.svg
+decisions:
+  - id: step-turn-hierarchy
+    title:
+      en: Steps inside Turns
+      zh: Turn 之内是 Step
+    description:
+      en: "A step is one model request plus the tools it calls. A turn is zero or more steps: it opens before its first input is claimed and closes once nothing is owed. The loop repeatedly claims next-step input and runs steps until the turn is owed nothing."
+      zh: step 是一次模型请求加上它调用的工具。turn 是零或多个 step：它在首个输入被认领前开启，在不再欠任何东西时关闭。循环反复认领下一步输入并执行 step，直到 turn 不再欠任何东西。
+    alternatives:
+      en: Treating every model call as one flat unit would be simpler, but then "one user question with several follow-up tool rounds" would fragment into unrelated records, and tool-driven continuation could not express that it belongs to the same turn.
+      zh: 把每次模型调用当作一个扁平单元更简单，但那样"一个用户问题带多轮工具跟进"会碎成互不相关的记录，工具驱动的延续也无法表达它属于同一个 turn。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Turn flow — step/turn definition and loop'
+          zh: '§ Turn flow——step/turn 定义与循环'
+      - path: docs/agent-lifecycle.md
+        note:
+          en: 'Sequence diagram of the agent lifecycle'
+          zh: 'agent 生命周期的时序图'
+  - id: history-derived-from-log
+    title:
+      en: Model History Is Derived, Not Assembled
+      zh: 模型历史是派生的，不是拼装的
+    description:
+      en: Each step appends entered messages as user/message, derives model history from the log, and streams assistant output through llm/stream. Derivation means the same log renders history, fork, resume, telemetry, and UI consistently.
+      zh: 每个 step 把进入的消息作为 user/message 追加，从日志派生模型历史，并通过 llm/stream 流式输出助手内容。派生意味着同一份日志让历史、fork、resume、遥测和 UI 保持一致。
+    alternatives:
+      en: Keeping an in-memory message array mirror would be faster, but any divergence between the mirror and the log would corrupt replay fidelity. Deriving on demand keeps one source of truth and makes replay trivially correct.
+      zh: 维护一份内存消息数组镜像更快，但镜像与日志的任何偏差都会破坏回放保真度。按需派生保持单一事实源，让回放天然正确。
+    codeRefs:
+      - path: docs/subsystems/session.md
+        note:
+          en: 'deriveMessages() projects model history from the log'
+          zh: 'deriveMessages() 从日志投影模型历史'
+  - id: turn-stopping
+    title:
+      en: A Serial Stop Point That Owns the Decision
+      zh: 拥有决策的串行停止点
+    description:
+      en: "agent/turn-stopping is serial and has no next(): a listener can stop the turn or let it continue — it owns the decision without delegating. Unlike the waterfalls (agent/pre-step, agent/request, tools/*), it does not wrap values."
+      zh: agent/turn-stopping 是串行的且没有 next()：监听者可以停止 turn 或让它继续——它拥有决策而无须委托。与 waterfall（agent/pre-step、agent/request、tools/*）不同，它不包装值。
+    alternatives:
+      en: Making turn stopping a waterfall would let listeners wrap the decision, but stopping is a single decision, not a value transform — wrapping would let a downstream listener silently override an upstream stop.
+      zh: 把 turn 停止做成 waterfall 会让监听者包装决策，但停止是单一决策而非值变换——包装会让下游监听者悄悄覆盖上游的停止决定。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Turn flow — agent/turn-stopping is serial and has no next()'
+          zh: '§ Turn flow——agent/turn-stopping 是串行的且没有 next()'

@@ -1,0 +1,65 @@
+# Chapter 06 — Session Log
+# Content contract: docs/contract/content-contract.md
+
+id: ch06-session-log
+order: 6
+title:
+  en: Session Log
+  zh: 会话日志
+summary:
+  en: The log is the source of the context the model sees — and a runtime invariant asserts that anything model-visible is reconstructable from it.
+  zh: 日志是模型所见上下文的来源——运行时不变式断言：任何模型可见的内容都能从它重建。
+topics:
+  - packages/core/session
+  - docs/subsystems/session.md
+diagrams:
+  - session-log.svg
+decisions:
+  - id: model-visible-means-logged
+    title:
+      en: Model-Visible Means Logged
+      zh: 模型可见即记录
+    description:
+      en: "Anything that reaches a model request must be reconstructable from the log, and a runtime invariant asserts it. This is why a new model-visible input requires a new session event: extend SessionEventMap and render from the log."
+      zh: 任何到达模型请求的内容都必须能从日志重建，运行时不变式强制这一点。这就是为什么新的模型可见输入需要新的 session 事件：扩展 SessionEventMap 并从日志渲染。
+    alternatives:
+      en: Injecting context directly into the model request would be convenient and cheap, but it would create a second, unlogged path to the model — breaking replay, telemetry, persistence, and audit. The invariant keeps every model-visible input on the log.
+      zh: 直接把上下文注入模型请求既方便又便宜，但它会制造第二条未记录的到达模型的路径——破坏回放、遥测、持久化和审计。该不变式让所有模型可见输入都留在日志上。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Session log — model-visible means logged'
+          zh: '§ Session log——模型可见即记录'
+    insight:
+      en: "When adding a feature to dsh, ask: how does this reach the model — and is it on the log?"
+      zh: 给 dsh 加功能时问自己：这个内容如何到达模型——它是否在日志上？
+  - id: lossless-replay
+    title:
+      en: Lossless, Chunk-Level Fidelity
+      zh: 无损、块级保真
+    description:
+      en: Raw assistant/chunk events preserve token-level replay fidelity; assembled assistant/message carries usage. Every event is lossless JSON and sequence numbers stay contiguous, so persistence stores the canonical log verbatim.
+      zh: 原始 assistant/chunk 事件保留 token 级回放保真；组装后的 assistant/message 携带用量。每个事件都是无损 JSON，序号保持连续，持久化可逐字存储规范日志。
+    alternatives:
+      en: Persisting only the assembled messages would shrink the log, but the UI renders from raw chunks and telemetry needs token streams — a lossy log would force re-invention of the raw stream at replay time.
+      zh: 只持久化组装后的消息可以压缩日志，但 UI 从原始块渲染、遥测需要 token 流——有损日志会在回放时迫使重建原始流。
+    codeRefs:
+      - path: docs/subsystems/session.md
+        note:
+          en: 'assistant/chunk — token-level replay fidelity; lossless JSON'
+          zh: 'assistant/chunk——token 级回放保真；无损 JSON'
+  - id: derive-not-store
+    title:
+      en: Derive Every Projection from the Log
+      zh: 从日志派生所有投影
+    description:
+      en: Fork, resume, transcripts, telemetry, and persistence all derive from the same stream. Consumers render from the log; nothing owns a second private copy of history.
+      zh: fork、resume、转写、遥测和持久化都从同一条流派生。消费者从日志渲染；没有任何东西拥有第二份私有的历史副本。
+    alternatives:
+      en: Per-feature history stores would be independently convenient but would drift as features evolve — a fork feature and a telemetry feature would disagree about what happened. One log, many projections.
+      zh: 每个功能各存一份历史，独立看很方便，但会随功能演进而漂移——fork 功能和遥测功能会对"发生了什么"产生分歧。一条日志，多个投影。
+    codeRefs:
+      - path: docs/subsystems/session.md
+        note:
+          en: 'Session log — the source of the context the model sees'
+          zh: 'Session log——模型所见上下文的来源'

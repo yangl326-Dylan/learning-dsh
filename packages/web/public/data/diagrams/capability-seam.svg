@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="680" viewBox="0 0 1100 680" fill="none">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1100" height="680" rx="12" fill="#0f172a"/>
+  <text x="550" y="36" text-anchor="middle" fill="#e2e8f0" font-size="17" font-weight="bold" font-family="system-ui">Capability Seam — three roles, one swappable capability</text>
+
+  <!-- Role 1: Service Definition -->
+  <g font-family="system-ui">
+    <rect x="60" y="64" width="980" height="150" rx="10" fill="#1e3a5f" opacity="0.35" stroke="#3B82F6" stroke-width="1.6"/>
+    <text x="80" y="90" fill="#93c5fd" font-size="12" font-weight="bold">1 · Service Definition — the socket spec (interface)</text>
+    <text x="80" y="108" fill="#64748b" font-size="9">declares the interface · e.g. the web capability in packages/web · the shape stays</text>
+
+    <rect x="80" y="122" width="280" height="58" rx="8" fill="#0f1f33" stroke="#3B82F6" stroke-width="1.2"/>
+    <text x="220" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9.5">interface &amp; events</text>
+    <text x="220" y="164" text-anchor="middle" fill="#64748b" font-size="8.5">what a provider must implement</text>
+
+    <rect x="400" y="122" width="280" height="58" rx="8" fill="#0f1f33" stroke="#3B82F6" stroke-width="1.2"/>
+    <text x="540" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9.5">seam events</text>
+    <text x="540" y="164" text-anchor="middle" fill="#64748b" font-size="8.5">fs/* tools/* telemetry/* — attach here</text>
+
+    <rect x="720" y="122" width="280" height="58" rx="8" fill="#0f1f33" stroke="#3B82F6" stroke-width="1.2"/>
+    <text x="860" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9.5">service graph</text>
+    <text x="860" y="164" text-anchor="middle" fill="#64748b" font-size="8.5">how the roles wire together</text>
+  </g>
+
+  <!-- Role 2: Service Provider -->
+  <g font-family="system-ui">
+    <rect x="60" y="232" width="980" height="150" rx="10" fill="#3b1e5f" opacity="0.35" stroke="#8B5CF6" stroke-width="1.6"/>
+    <text x="80" y="258" fill="#c4b5fd" font-size="12" font-weight="bold">2 · Service Provider — the plug (implementation)</text>
+    <text x="80" y="276" fill="#64748b" font-size="9">implements the interface · any vendor that fits · providers register capabilities, not tools</text>
+
+    <rect x="80" y="290" width="220" height="58" rx="8" fill="#221233" stroke="#8B5CF6" stroke-width="1.2"/>
+    <text x="190" y="314" text-anchor="middle" fill="#e2e8f0" font-size="9.5">filesystem provider</text>
+    <text x="190" y="332" text-anchor="middle" fill="#64748b" font-size="8.5">local or remote sandbox</text>
+
+    <rect x="320" y="290" width="220" height="58" rx="8" fill="#221233" stroke="#8B5CF6" stroke-width="1.2"/>
+    <text x="430" y="314" text-anchor="middle" fill="#e2e8f0" font-size="9.5">subprocess provider</text>
+    <text x="430" y="332" text-anchor="middle" fill="#64748b" font-size="8.5">Bash · PTY · LSP move with it</text>
+
+    <rect x="560" y="290" width="220" height="58" rx="8" fill="#221233" stroke="#8B5CF6" stroke-width="1.2"/>
+    <text x="670" y="314" text-anchor="middle" fill="#e2e8f0" font-size="9.5">web-search provider</text>
+    <text x="670" y="332" text-anchor="middle" fill="#64748b" font-size="8.5">any search vendor</text>
+
+    <rect x="800" y="290" width="220" height="58" rx="8" fill="#221233" stroke="#8B5CF6" stroke-width="1.2"/>
+    <text x="910" y="314" text-anchor="middle" fill="#e2e8f0" font-size="9.5">subagent provider</text>
+    <text x="910" y="332" text-anchor="middle" fill="#64748b" font-size="8.5">child agent · delegated turn</text>
+  </g>
+
+  <!-- Role 3: Consumer -->
+  <g font-family="system-ui">
+    <rect x="60" y="400" width="980" height="150" rx="10" fill="#1e3a2e" opacity="0.35" stroke="#10B981" stroke-width="1.6"/>
+    <text x="80" y="426" fill="#6ee7b7" font-size="12" font-weight="bold">3 · Consumer — the appliance (model-facing tool)</text>
+    <text x="80" y="444" fill="#64748b" font-size="9">owns the model face: names, schemas, prompt guidance, presentation · schema belongs to the consumer, not the provider</text>
+
+    <rect x="80" y="458" width="440" height="58" rx="8" fill="#0f2a1e" stroke="#10B981" stroke-width="1.2"/>
+    <text x="300" y="482" text-anchor="middle" fill="#e2e8f0" font-size="9.5">dsh-tool-web — model-facing tool</text>
+    <text x="300" y="500" text-anchor="middle" fill="#64748b" font-size="8.5">schema · prompt guidance · presentation</text>
+
+    <rect x="560" y="458" width="440" height="58" rx="8" fill="#0f2a1e" stroke="#10B981" stroke-width="1.2"/>
+    <text x="780" y="482" text-anchor="middle" fill="#e2e8f0" font-size="9.5">swap the search provider</text>
+    <text x="780" y="500" text-anchor="middle" fill="#64748b" font-size="8.5">the model still asks the same way</text>
+  </g>
+
+  <!-- Payoff strip -->
+  <rect x="60" y="570" width="980" height="52" rx="8" fill="#0b1526" stroke="#475569" stroke-width="1.2"/>
+  <text x="80" y="592" fill="#fcd34d" font-size="10" font-weight="bold" font-family="system-ui">one provider swap changes the whole product</text>
+  <text x="80" y="610" fill="#64748b" font-size="9">a shared execution world moves Bash, PTY, and LSP together · the choice stays in one place</text>
+
+  <!-- Takeaway -->
+  <text x="550" y="660" text-anchor="middle" fill="#64748b" font-size="10" font-family="system-ui">One role alone is not a seam. Adding a capability means designing definition, provider, and consumer.</text>
+</svg>

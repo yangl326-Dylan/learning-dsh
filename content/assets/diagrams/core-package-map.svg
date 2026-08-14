@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="640" viewBox="0 0 1100 640" fill="none">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1100" height="640" rx="12" fill="#0f172a"/>
+  <text x="550" y="36" text-anchor="middle" fill="#e2e8f0" font-size="17" font-weight="bold" font-family="system-ui">Core Packages — the spine and its ctx keys</text>
+
+  <!-- Central ctx -->
+  <rect x="390" y="270" width="320" height="110" rx="12" fill="#1e293b" stroke="#F59E0B" stroke-width="2"/>
+  <text x="550" y="305" text-anchor="middle" fill="#fcd34d" font-size="14" font-weight="bold" font-family="system-ui">ctx — shared context</text>
+  <text x="550" y="328" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="system-ui">a service directory</text>
+  <text x="550" y="348" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="system-ui">services found by key, never imported directly</text>
+  <text x="550" y="366" text-anchor="middle" fill="#475569" font-size="9" font-family="system-ui">plugins depend on keys through inject, not on packages</text>
+
+  <!-- Top row: 3 packages -->
+  <g font-family="system-ui">
+    <rect x="70" y="80" width="280" height="86" rx="10" fill="#1e3a5f" stroke="#3B82F6" stroke-width="1.4"/>
+    <text x="210" y="112" text-anchor="middle" fill="#93c5fd" font-size="12.5" font-weight="bold">core/session</text>
+    <text x="210" y="132" text-anchor="middle" fill="#94a3b8" font-size="10">ctx.sessions</text>
+    <text x="210" y="150" text-anchor="middle" fill="#64748b" font-size="9">append-only event log · the ledger</text>
+    <line x1="270" y1="166" x2="420" y2="268" stroke="#3B82F6" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <text x="330" y="205" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui">ctx.sessions</text>
+
+    <rect x="410" y="80" width="280" height="86" rx="10" fill="#1e3a5f" stroke="#10B981" stroke-width="1.4"/>
+    <text x="550" y="112" text-anchor="middle" fill="#6ee7b7" font-size="12.5" font-weight="bold">core/tools</text>
+    <text x="550" y="132" text-anchor="middle" fill="#94a3b8" font-size="10">ctx.tools</text>
+    <text x="550" y="150" text-anchor="middle" fill="#64748b" font-size="9">scoped registry + guarded pipeline</text>
+    <line x1="550" y1="166" x2="550" y2="268" stroke="#10B981" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <text x="550" y="205" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui">ctx.tools</text>
+
+    <rect x="750" y="80" width="280" height="86" rx="10" fill="#1e3a5f" stroke="#EF4444" stroke-width="1.4"/>
+    <text x="890" y="112" text-anchor="middle" fill="#fca5a5" font-size="12.5" font-weight="bold">llm/llm</text>
+    <text x="890" y="132" text-anchor="middle" fill="#94a3b8" font-size="10">ctx.llm</text>
+    <text x="890" y="150" text-anchor="middle" fill="#64748b" font-size="9">model adapters · streaming</text>
+    <line x1="830" y1="166" x2="680" y2="268" stroke="#EF4444" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <text x="770" y="205" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui">ctx.llm</text>
+  </g>
+
+  <!-- Bottom row: 3 packages -->
+  <g font-family="system-ui">
+    <rect x="70" y="470" width="280" height="86" rx="10" fill="#1e3a5f" stroke="#8B5CF6" stroke-width="1.4"/>
+    <text x="210" y="502" text-anchor="middle" fill="#c4b5fd" font-size="12.5" font-weight="bold">core/agent</text>
+    <text x="210" y="522" text-anchor="middle" fill="#94a3b8" font-size="10">ctx.agents</text>
+    <text x="210" y="540" text-anchor="middle" fill="#64748b" font-size="9">Agent interface · agent/* events</text>
+    <line x1="270" y1="470" x2="420" y2="382" stroke="#8B5CF6" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <text x="330" y="435" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui">ctx.agents</text>
+
+    <rect x="410" y="470" width="280" height="86" rx="10" fill="#1e3a5f" stroke="#10B981" stroke-width="1.4"/>
+    <text x="550" y="502" text-anchor="middle" fill="#6ee7b7" font-size="12.5" font-weight="bold">core/agent-loop</text>
+    <text x="550" y="522" text-anchor="middle" fill="#94a3b8" font-size="10">ctx.agentLoop</text>
+    <text x="550" y="540" text-anchor="middle" fill="#64748b" font-size="9">default driver — a plugin like any other</text>
+    <line x1="550" y1="470" x2="550" y2="382" stroke="#10B981" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <text x="550" y="435" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui">ctx.agentLoop</text>
+
+    <rect x="750" y="470" width="280" height="86" rx="10" fill="#1e3a5f" stroke="#F59E0B" stroke-width="1.4"/>
+    <text x="890" y="502" text-anchor="middle" fill="#fcd34d" font-size="12.5" font-weight="bold">core/system-prompt</text>
+    <text x="890" y="522" text-anchor="middle" fill="#94a3b8" font-size="10">ctx.systemPrompt</text>
+    <text x="890" y="540" text-anchor="middle" fill="#64748b" font-size="9">prompt assembly</text>
+    <line x1="830" y1="470" x2="680" y2="382" stroke="#F59E0B" stroke-width="1.4" marker-end="url(#arrow)"/>
+    <text x="770" y="435" text-anchor="middle" fill="#64748b" font-size="9" font-family="system-ui">ctx.systemPrompt</text>
+  </g>
+
+  <!-- Main flow annotation -->
+  <path d="M 280 330 C 200 360 160 300 210 168" stroke="#94a3b8" stroke-width="1.2" fill="none" stroke-dasharray="5,3"/>
+  <path d="M 820 330 C 900 360 940 300 890 168" stroke="#94a3b8" stroke-width="1.2" fill="none" stroke-dasharray="5,3"/>
+  <text x="150" y="300" fill="#64748b" font-size="9" font-family="system-ui" transform="rotate(-12 150 300)">deriveMessages()</text>
+  <text x="940" y="300" fill="#64748b" font-size="9" font-family="system-ui" transform="rotate(12 940 300)">llm/stream</text>
+
+  <!-- Takeaway -->
+  <text x="550" y="620" text-anchor="middle" fill="#64748b" font-size="10" font-family="system-ui">Each package is small and owns one key — that key is the seam through which it participates in the product.</text>
+</svg>

@@ -1,0 +1,66 @@
+# Chapter 01 — Everything Is a Plugin
+# Content contract: docs/contract/content-contract.md
+
+id: ch01-everything-is-a-plugin
+order: 1
+title:
+  en: Everything Is a Plugin
+  zh: 一切皆插件
+summary:
+  en: The Cordis foundation under dsh — there is no privileged core to patch. Plugins contribute services, typed events, and reversible effects to a shared context.
+  zh: dsh 底层的 Cordis 根基——没有需要修补的特权核心。插件向共享上下文贡献服务、类型化事件与可逆副作用。
+topics:
+  - vendor/cordis
+  - docs/cordis-primer.md
+  - docs/architecture.md
+diagrams:
+  - plugin-tree.svg
+decisions:
+  - id: no-privileged-core
+    title:
+      en: There Is No Privileged Core
+      zh: 没有特权核心
+    description:
+      en: Every part of the product is a plugin — the model adapter, the tool registry, the session log, and the agent loop itself. Extending dsh means mounting a plugin beside the others, never patching a core. There is no single package you must edit to change product behavior.
+      zh: 产品的每个部分都是插件——模型适配器、工具注册表、会话日志、乃至 agent 循环本身。扩展 dsh 意味着在既有插件旁挂载一个新插件，而不是修补某个核心。不存在必须修改才能改变产品行为的单一包。
+    alternatives:
+      en: "A conventional kernel-plus-extensions architecture would have given a stable core and well-defined extension points, but it also creates a permanent second class of citizens: plugins can never own core behaviors. Treating the loop itself as a plugin means even the most central behavior is replaceable from configuration."
+      zh: 传统的"内核 + 扩展"架构能提供稳定的核心和明确的扩展点，但它也制造了永久二等公民：插件永远无法拥有核心行为。把循环本身当作插件，意味着即使最核心的行为也能通过配置替换。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Cordis: every part of the product is a plugin'
+          zh: '§ Cordis：产品的每个部分都是插件'
+    insight:
+      en: If you can replace the agent loop from configuration, the "core" is just another plugin you have not replaced yet.
+      zh: 如果 agent 循环都能从配置替换，那么"核心"不过是另一个你还没替换的插件而已。
+  - id: service-key-context
+    title:
+      en: A Context Is a Repository of Services
+      zh: 上下文是服务的仓库
+    description:
+      en: A service claims a stable ctx.<key> (ctx.tools, ctx.llm, ctx.sessions) from the shared context. Other plugins find services by key instead of importing a concrete implementation, so dependencies are declared through inject and satisfied by the context at load time.
+      zh: 服务从共享上下文认领一个稳定的 ctx.<key>（ctx.tools、ctx.llm、ctx.sessions）。其他插件通过 key 查找服务，而不是 import 具体实现；依赖通过 inject 声明，加载时由上下文满足。
+    alternatives:
+      en: Direct imports between packages would be simpler and type-safe, but would freeze the dependency graph at compile time and make any service swap require a code change. The key-based registry is what makes provider swaps and configuration-level replacement possible.
+      zh: 包之间直接 import 更简单也更类型安全，但会在编译期冻结依赖图，任何服务替换都需要改代码。基于 key 的注册表正是 provider 可替换、配置级替换得以实现的原因。
+    codeRefs:
+      - path: docs/cordis-primer.md
+        note:
+          en: '§ Cordis In Five Ideas — context as a repository of services'
+          zh: '§ Cordis 五思想——上下文作为服务仓库'
+  - id: reversible-effects
+    title:
+      en: Registrations Are Reversible Effects
+      zh: 注册是可逆的副作用
+    description:
+      en: Prompt sections, tool schemas, adapters, providers, and event listeners are installed through ctx.effect() or ctx.on(). When a plugin unloads, its registrations unwind predictably — reload and teardown never leak state.
+      zh: 提示词片段、工具 schema、适配器、提供者和事件监听都通过 ctx.effect() 或 ctx.on() 安装。插件卸载时，它的注册会可预测地回滚——重载和卸载从不泄漏状态。
+    alternatives:
+      en: "Global registries with explicit cleanup calls are error-prone: a forgotten cleanup leaks behavior and is hard to test. Making every registration an effect that disposes itself ties lifecycle correctness to the framework, not to each plugin author's discipline."
+      zh: 带显式清理调用的全局注册表容易出错：忘掉清理会泄漏行为且难以测试。让每个注册都成为可自我释放的 effect，把生命周期正确性交给框架，而不是依赖每个插件作者的自觉。
+    codeRefs:
+      - path: docs/cordis-primer.md
+        note:
+          en: '§ Practical Rules — every registration should have a disposer'
+          zh: '§ 实用规则——每个注册都应有 disposer'

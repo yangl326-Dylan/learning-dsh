@@ -1,0 +1,109 @@
+# learning-dsh
+
+Versioned, bilingual (EN/ZH) source-code learning pages for [DeepSeek Harness](https://github.com/yangl326-Dylan/deepseek-harness) (dsh), served as a dsh plugin at a configurable prefix route (default `/learning`).
+
+为 [DeepSeek Harness](https://github.com/yangl326-Dylan/deepseek-harness) (dsh) 提供版本化中英双语源码学习页面；以 dsh 插件形式运行，挂载在可配置的前缀路由（默认 `/learning`）上。
+
+|  |  |
+|---|---|
+| 插件 Plugin | `@dylan/learning-dsh`（Cordis plugin） |
+| 前端 Frontend | `@learning-dsh/web`（Vite static build） |
+| License | MIT |
+
+---
+
+## Usage / 使用方式
+
+### Prerequisites / 前置条件
+
+- dsh CLI available (`pnpm dsh ...` from the dsh source tree, or an installed `dsh` binary) / dsh CLI 可用（dsh 源码树下 `pnpm dsh ...`，或已安装的 `dsh` 命令）
+- Node ≥ 22
+- Built artifacts / 构建产物：
+  ```sh
+  cd packages/web && npx vite build
+  cd packages/plugin && npx tsc -p tsconfig.build.json
+  ```
+
+### Option A — Install as a bundle (recommended) / 方式 A：作为 bundle 安装（推荐）
+
+The plugin package ships a `dsh.bundle` layer (`cordis.patch.yml`), so it installs into a profile exactly like any other dsh bundle. From the dsh source tree / 插件包自带 `dsh.bundle` 配置层（`cordis.patch.yml`），可与任意 dsh bundle 一样安装进 profile。在 dsh 源码树下执行：
+
+```sh
+pnpm dsh plugin --profile web add /path/to/learning-dsh/packages/plugin
+```
+
+What happens / 效果：
+
+1. pnpm links the package into the profile (`~/.dsh/profiles/web/node_modules`) / pnpm 将包链接进 profile
+2. Because the manifest declares `dsh.bundle.patch`, `dsh` appends `@dylan/learning-dsh` to `dsh.profile.bundles` / 因 manifest 声明了 `dsh.bundle.patch`，`dsh` 自动将 `@dylan/learning-dsh` 追加到 `dsh.profile.bundles`
+3. Restart your dsh instance (or boot a fresh one) / 重启 dsh 实例（或启动新实例）：
+
+```sh
+pnpm dsh --profile web --port 3080
+```
+
+4. Open the learning page / 打开学习页面：<http://127.0.0.1:3080/learning/>
+
+Verify the composed tree without booting / 不启动即可验证组合配置：
+
+```sh
+pnpm dsh --profile web --dump-config   # look for the "# == @dylan/learning-dsh" layer
+```
+
+Remove / 卸载：
+
+```sh
+pnpm dsh plugin --profile web remove @dylan/learning-dsh
+```
+
+### Option B — Load with a `--patch` overlay (no profile change) / 方式 B：`--patch` 覆盖加载（不改 profile）
+
+Good for a quick trial without touching your profile / 适合不想改动 profile 的快速试用。The repo ships a ready overlay / 仓库已提供现成覆盖文件 `scripts/learning-dsh.patch.yml`:
+
+```sh
+pnpm dsh --profile web --patch /path/to/learning-dsh/scripts/learning-dsh.patch.yml --port 3099
+```
+
+Open / 打开 <http://127.0.0.1:3099/learning/>. Nothing is written to the profile; drop the `--patch` flag to go back / 不写入 profile；去掉 `--patch` 参数即恢复原状。
+
+### Configuration / 配置
+
+The plugin row can be overridden in `cordis.patch.yml` by `id: learning-dsh` / 插件行可在 `cordis.patch.yml` 中按 `id: learning-dsh` 覆盖：
+
+```yaml
+- id: learning-dsh
+  config:
+    mountPath: /learning   # prefix route / 挂载前缀，默认 /learning
+    title: Learning dsh    # page title baked into served index.html / 页面标题
+```
+
+### Notes / 注意事项
+
+- **Mount path must be unique** — the plugin registers a `prefix` route on the dsh webserver; a duplicate `mountPath` fails loudly / **挂载路径必须唯一**——插件在 dsh webserver 上注册 `prefix` 路由；重复的 `mountPath` 会直接报错。
+- **The webserver fallback seat belongs to the dsh web app** — paths outside your `mountPath` keep serving the dsh UI / **webserver 的 fallback seat 归 dsh web app 所有**——`mountPath` 之外的路径仍由 dsh 主界面服务。
+- **Service-name compatibility** — the plugin auto-detects the host webserver service: `ctx.httpServer` (published `@deepseek-ai/dsh-host-webserver@0.0.1-rc.1`) or `ctx.webServer` (master source). No configuration needed / **服务名兼容**——插件自动识别宿主 webserver 服务：`ctx.httpServer`（npm 发布版）或 `ctx.webServer`（master 源码），无需配置。
+- **`@learning-dsh/web` must be resolvable from the plugin package** — the plugin locates the frontend dist via `require.resolve('@learning-dsh/web')`; in this repo it is a workspace devDependency, so keep the monorepo `node_modules` intact when running from the checkout / **`@learning-dsh/web` 需可从插件包解析**——插件通过 `require.resolve('@learning-dsh/web')` 定位前端 dist；本仓库中它是 workspace devDependency，从源码运行时请保留 monorepo `node_modules`。
+
+---
+
+## Repository layout / 仓库布局
+
+```
+content/            版本化双语内容源（YAML + body.md + SVG）
+docs/               spec 驱动文档（contract / feature / spec）— 中文
+packages/web        Vite 静态前端（@learning-dsh/web）
+packages/plugin     dsh Cordis 插件（@dylan/learning-dsh）
+scripts/            内容构建管线（build-content.ts）
+```
+
+## Development / 开发
+
+```sh
+pnpm install                       # workspace 安装
+npx tsx scripts/build-content.ts   # 构建内容数据 -> packages/web/public/data
+cd packages/web && npx vite build  # 构建前端 dist
+cd packages/plugin && npx tsc -p tsconfig.build.json   # 构建插件 lib
+cd packages/plugin && node e2e/verify.mjs              # 独立 E2E（真实 Cordis + webserver + 插件）
+```
+
+Docs / 文档：[docs/README.md](docs/README.md)

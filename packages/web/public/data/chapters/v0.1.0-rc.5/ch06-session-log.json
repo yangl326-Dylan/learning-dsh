@@ -1,0 +1,101 @@
+{
+  "id": "ch06-session-log",
+  "order": 6,
+  "title": {
+    "en": "Session Log",
+    "zh": "会话日志"
+  },
+  "summary": {
+    "en": "The log is the source of the context the model sees — and a runtime invariant asserts that anything model-visible is reconstructable from it.",
+    "zh": "日志是模型所见上下文的来源——运行时不变式断言：任何模型可见的内容都能从它重建。"
+  },
+  "topics": [
+    "packages/core/session",
+    "docs/subsystems/session.md"
+  ],
+  "diagrams": [
+    "session-log.svg"
+  ],
+  "decisions": [
+    {
+      "id": "model-visible-means-logged",
+      "title": {
+        "en": "Model-Visible Means Logged",
+        "zh": "模型可见即记录"
+      },
+      "description": {
+        "en": "Anything that reaches a model request must be reconstructable from the log, and a runtime invariant asserts it. This is why a new model-visible input requires a new session event: extend SessionEventMap and render from the log.",
+        "zh": "任何到达模型请求的内容都必须能从日志重建，运行时不变式强制这一点。这就是为什么新的模型可见输入需要新的 session 事件：扩展 SessionEventMap 并从日志渲染。"
+      },
+      "alternatives": {
+        "en": "Injecting context directly into the model request would be convenient and cheap, but it would create a second, unlogged path to the model — breaking replay, telemetry, persistence, and audit. The invariant keeps every model-visible input on the log.",
+        "zh": "直接把上下文注入模型请求既方便又便宜，但它会制造第二条未记录的到达模型的路径——破坏回放、遥测、持久化和审计。该不变式让所有模型可见输入都留在日志上。"
+      },
+      "codeRefs": [
+        {
+          "path": "docs/architecture.md",
+          "note": {
+            "en": "§ Session log — model-visible means logged",
+            "zh": "§ Session log——模型可见即记录"
+          }
+        }
+      ],
+      "insight": {
+        "en": "When adding a feature to dsh, ask: how does this reach the model — and is it on the log?",
+        "zh": "给 dsh 加功能时问自己：这个内容如何到达模型——它是否在日志上？"
+      }
+    },
+    {
+      "id": "lossless-replay",
+      "title": {
+        "en": "Lossless, Chunk-Level Fidelity",
+        "zh": "无损、块级保真"
+      },
+      "description": {
+        "en": "Raw assistant/chunk events preserve token-level replay fidelity; assembled assistant/message carries usage. Every event is lossless JSON and sequence numbers stay contiguous, so persistence stores the canonical log verbatim.",
+        "zh": "原始 assistant/chunk 事件保留 token 级回放保真；组装后的 assistant/message 携带用量。每个事件都是无损 JSON，序号保持连续，持久化可逐字存储规范日志。"
+      },
+      "alternatives": {
+        "en": "Persisting only the assembled messages would shrink the log, but the UI renders from raw chunks and telemetry needs token streams — a lossy log would force re-invention of the raw stream at replay time.",
+        "zh": "只持久化组装后的消息可以压缩日志，但 UI 从原始块渲染、遥测需要 token 流——有损日志会在回放时迫使重建原始流。"
+      },
+      "codeRefs": [
+        {
+          "path": "docs/subsystems/session.md",
+          "note": {
+            "en": "assistant/chunk — token-level replay fidelity; lossless JSON",
+            "zh": "assistant/chunk——token 级回放保真；无损 JSON"
+          }
+        }
+      ]
+    },
+    {
+      "id": "derive-not-store",
+      "title": {
+        "en": "Derive Every Projection from the Log",
+        "zh": "从日志派生所有投影"
+      },
+      "description": {
+        "en": "Fork, resume, transcripts, telemetry, and persistence all derive from the same stream. Consumers render from the log; nothing owns a second private copy of history.",
+        "zh": "fork、resume、转写、遥测和持久化都从同一条流派生。消费者从日志渲染；没有任何东西拥有第二份私有的历史副本。"
+      },
+      "alternatives": {
+        "en": "Per-feature history stores would be independently convenient but would drift as features evolve — a fork feature and a telemetry feature would disagree about what happened. One log, many projections.",
+        "zh": "每个功能各存一份历史，独立看很方便，但会随功能演进而漂移——fork 功能和遥测功能会对\"发生了什么\"产生分歧。一条日志，多个投影。"
+      },
+      "codeRefs": [
+        {
+          "path": "docs/subsystems/session.md",
+          "note": {
+            "en": "Session log — the source of the context the model sees",
+            "zh": "Session log——模型所见上下文的来源"
+          }
+        }
+      ]
+    }
+  ],
+  "body": {
+    "en": "## Orienting in the repo\n\nThe log lives in `packages/core/session`. `docs/subsystems/session.md` is the primary document; `docs/architecture.md` § *Session log* is the invariant in one paragraph. The type that defines the vocabulary is `SessionEventMap` in `packages/core/session/src/types.ts`.\n\nThe chapter's thesis is a runtime invariant: **anything model-visible must be reconstructable from the log**. Work backwards from it and the design of dsh's session becomes obvious.\n\n## Model-visible means logged\n\nThe *model-visible-means-logged* decision is not a style preference; it is enforced. Anything that reaches a model request — a system prompt section, a tool schema, a user message, a prior assistant turn — must be derivable from the session log. Think of the log as the **court transcript**: if it did not happen in the transcript, the model never saw it. That is why a new model-visible input requires a new session event: you extend `SessionEventMap` and render from the log, rather than injecting the context directly into the request.\n\nThe alternative is seductive — inject context straight into the model request, cheap and convenient — but it creates a second, unlogged path to the model. Replay breaks, telemetry misses it, persistence cannot store it, audit cannot see it. The invariant keeps every model-visible input on the one road.\n\nThe practical question to carry into any dsh feature: how does this reach the model — and is it on the log?\n\n## Lossless, chunk-level fidelity\n\nTwo event kinds carry the model output. Raw `assistant/chunk` events preserve **token-level replay fidelity** — think of them as the **verbatim transcript** — the UI renders from these chunks, and telemetry needs the token stream. The assembled `assistant/message` carries usage on top. The *lossless-replay* decision keeps both: every event is lossless JSON, and sequence numbers stay contiguous, so persistence can store the canonical log verbatim.\n\nWhy not persist only the assembled messages? The log would shrink, but the UI and telemetry consume the raw stream — a lossy log would force re-inventing the raw stream at replay time, and \"replay\" would no longer mean \"play back exactly what happened.\"\n\n## One log, many projections\n\n*derive-not-store* is the rule for every consumer. Fork, resume, transcripts, telemetry, and persistence all derive from the same stream. `deriveMessages()` projects model history; the UI projects its own view; a future feature projects another. Imagine a court transcript and different reports written from it: the transcript is the single truth, each report is a projection. Nobody owns a second private copy of history, so nobody's history can disagree with anyone else's.\n\nThe cost is that reading history is a projection, not a lookup. The benefit is structural: there is exactly one description of what happened, and every consumer renders the same facts. The moment a feature seems to need its own history store is the moment to ask which projection of the log it actually is.\n\n## Reading guide\n\n- `docs/subsystems/session.md` — the log, the invariant, `deriveMessages()`.\n- `packages/core/session/src/types.ts` — `SessionEventMap`; extend it to see how a new model-visible input enters the system.\n- Then revisit `docs/architecture.md` § *Session log* — the invariant should now read as an obvious consequence.",
+    "zh": "## 在仓库中定位\n\n日志在 `packages/core/session`。`docs/subsystems/session.md` 是主要文档；`docs/architecture.md` § *Session log* 用一段话讲清不变式。定义词汇表的类型是 `packages/core/session/src/types.ts` 中的 `SessionEventMap`。\n\n本章的论题是一条运行时不变式：**任何模型可见的内容都必须能从日志重建**。从它倒推，dsh 会话的设计就变得显而易见。\n\n## 模型可见即记录\n\n*model-visible-means-logged* 决策不是风格偏好，而是被强制执行的。任何到达模型请求的内容——系统提示词片段、工具 schema、用户消息、之前的助手 turn——都必须能从会话日志派生。把日志想成**法庭庭审记录**：如果记录里没有这件事，模型就从未见过它。这就是为什么新的模型可见输入需要新的 session 事件：你扩展 `SessionEventMap` 并从日志渲染，而不是直接把上下文注入请求。\n\n替代方案很诱人——直接把上下文注入模型请求，又便宜又方便——但它会制造第二条未记录的到达模型的路径。回放被破坏、遥测看不见它、持久化存不了它、审计查不到它。不变式让所有模型可见输入都留在同一条路上。\n\n要带进任何 dsh 功能的实际问题：这个内容如何到达模型——它是否在日志上？\n\n## 无损、块级保真\n\n两种事件承载模型输出。原始 `assistant/chunk` 事件保留 **token 级回放保真**——可以想成**逐字稿**——UI 从这些块渲染，遥测需要 token 流。组装后的 `assistant/message` 在其上携带用量。*lossless-replay* 决策两者都保留：每个事件都是无损 JSON，序号保持连续，因此持久化可以逐字存储规范日志。\n\n为什么不只持久化组装后的消息？日志会变小，但 UI 和遥测消费的是原始流——有损日志会在回放时迫使重建原始流，而\"回放\"也就不再意味着\"精确重现发生过的事\"。\n\n## 一条日志，多个投影\n\n*derive-not-store* 是每个消费者的规则。fork、resume、转写、遥测和持久化都从同一条流派生。`deriveMessages()` 投影模型历史；UI 投影自己的视图；未来的功能投影另一个。想象一份庭审记录，以及根据它写出的不同报告：记录是唯一真相，每份报告都是它的一个投影。没有人拥有第二份私有的历史副本，所以没有任何人的历史会与别人的不一致。\n\n代价是读历史是投影，不是查找。收益是结构性的：对\"发生了什么\"只有一种描述，每个消费者渲染相同的事实。当某个功能似乎需要自己的历史存储时，就是该问\"它实际上是日志的哪个投影\"的时刻。\n\n## 阅读指引\n\n- `docs/subsystems/session.md`——日志、不变式、`deriveMessages()`。\n- `packages/core/session/src/types.ts`——`SessionEventMap`；扩展它，看新的模型可见输入如何进入系统。\n- 然后重读 `docs/architecture.md` § *Session log*——不变式此时应当读起来像显而易见的推论。"
+  }
+}

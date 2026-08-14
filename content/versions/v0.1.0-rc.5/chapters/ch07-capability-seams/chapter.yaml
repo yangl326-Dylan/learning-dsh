@@ -1,0 +1,70 @@
+# Chapter 07 — Capability Seams
+# Content contract: docs/contract/content-contract.md
+
+id: ch07-capability-seams
+order: 7
+title:
+  en: Capability Seams
+  zh: 能力接缝
+summary:
+  en: A seam is a swappable capability with three roles — Service Definition, Service Provider, Consumer — and why one provider swap changes the whole product.
+  zh: 接缝是一种可替换能力，含三个角色——服务定义、服务提供者、消费者——以及为什么一次 provider 替换就能改变整个产品。
+topics:
+  - docs/capability-seams.md
+  - packages/web/web
+  - packages/fs
+diagrams:
+  - capability-seam.svg
+decisions:
+  - id: seam-trio
+    title:
+      en: Three Roles, One Seam
+      zh: 三个角色，一条接缝
+    description:
+      en: A seam has a Service Definition declaring the interface, a Service Provider implementing it, and a Consumer using it (commonly a model-facing tool). A package may combine roles, but one role alone is not a seam — adding a capability means designing all three.
+      zh: 接缝包含声明接口的服务定义、实现它的服务提供者、以及使用它的消费者（通常是模型面对的工具）。一个包可以合并多个角色，但单独一个角色不构成接缝——添加能力意味着设计全部三个角色。
+    alternatives:
+      en: A single package that defines, implements, and consumes a capability is the simplest shape, but then provider swaps require editing the consumer. Splitting the roles lets implementations vary independently behind one interface.
+      zh: 一个同时定义、实现、消费能力的包是最简单的形态，但那样替换 provider 就得改消费者。拆分角色让实现能在同一接口后独立变化。
+    codeRefs:
+      - path: docs/capability-seams.md
+        note:
+          en: 'Capability seam — three roles and the service graph'
+          zh: '能力接缝——三个角色与服务图'
+      - path: docs/subsystems/web.md
+        note:
+          en: 'Web as a worked example: dsh-web definition, dsh-web-search-* providers, dsh-tool-web consumer'
+          zh: 'web 作为实例：dsh-web 定义、dsh-web-search-* 提供者、dsh-tool-web 消费者'
+    insight:
+      en: One role alone is not a seam. Adding a capability means designing definition, provider, and consumer.
+      zh: 单独一个角色不构成接缝。添加能力意味着设计定义、提供者和消费者。
+  - id: provider-swap
+    title:
+      en: One Provider Swap Changes the Whole Product
+      zh: 一次 Provider 替换改变整个产品
+    description:
+      en: Filesystem and subprocess providers share one execution world — pointing them at a remote sandbox moves Bash, PTY, and LSP with them, with no provider forks. Subagent providers vary just as widely behind one interface, from a fresh child agent to a delegated turn in another product.
+      zh: 文件系统和子进程 provider 共享同一执行世界——把它们指向远程沙箱，Bash、PTY、LSP 随之整体迁移，无需 provider 分叉。子代理 provider 在同一接口后变化同样巨大：从全新子 agent 到委托给另一个产品的 turn。
+    alternatives:
+      en: Each consumer selecting its own backend would give finer control but would reintroduce coupling — every tool would re-decide the execution world. A shared provider keeps the choice in one place.
+      zh: 每个消费者自己选后端能获得更细的控制，但会重新引入耦合——每个工具都要重新决定执行世界。共享 provider 把选择集中在一处。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Capability seams — one provider swap changes the whole product'
+          zh: '§ Capability seams——一次 provider 替换改变整个产品'
+  - id: consumer-owns-model-face
+    title:
+      en: The Consumer Owns the Model-Facing Shape
+      zh: 消费者拥有模型面对的形态
+    description:
+      en: Providers register capabilities, not tools. The model-facing names, schemas, prompt guidance, and presentation all live in the consumer — the web search tool's schema is dsh-tool-web's, not any search provider's. A search-provider swap does not change how the model asks for a query.
+      zh: provider 注册能力，而不是工具。模型面对的名称、schema、提示词引导和展示都在消费者里——web 搜索工具的模式属于 dsh-tool-web，不属于任何搜索 provider。替换搜索 provider 不会改变模型如何发出查询。
+    alternatives:
+      en: Letting providers expose their own model-facing surface would couple the model's vocabulary to vendor APIs — switching vendors would change the tool schema the model sees. The consumer's single model face keeps the model vocabulary stable across swaps.
+      zh: 让 provider 暴露自己的模型面对表面，会把模型的词汇表耦合到厂商 API——切换厂商会改变模型看到的工具 schema。消费者统一的模型面让模型词汇表在替换中保持稳定。
+    codeRefs:
+      - path: docs/subsystems/web.md
+        note:
+          en: 'Providers register capabilities, not tools; consumer owns the model face'
+          zh: 'Provider 注册能力而非工具；消费者拥有模型面'

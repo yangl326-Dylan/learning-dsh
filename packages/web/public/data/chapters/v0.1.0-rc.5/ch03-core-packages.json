@@ -1,0 +1,115 @@
+{
+  "id": "ch03-core-packages",
+  "order": 3,
+  "title": {
+    "en": "Core Packages",
+    "zh": "核心包矩阵"
+  },
+  "summary": {
+    "en": "The packages that own the harness spine — session, tools, agent, agent-loop, system-prompt, llm — and the ctx keys they claim.",
+    "zh": "拥有 harness 主干的服务包——session、tools、agent、agent-loop、system-prompt、llm——以及它们认领的 ctx key。"
+  },
+  "topics": [
+    "packages/core/session",
+    "packages/core/tools",
+    "packages/core/agent",
+    "packages/core/agent-loop",
+    "packages/core/system-prompt",
+    "packages/llm/llm"
+  ],
+  "diagrams": [
+    "core-package-map.svg"
+  ],
+  "decisions": [
+    {
+      "id": "append-only-session",
+      "title": {
+        "en": "The Session Is an Append-Only Event Log",
+        "zh": "会话是追加式事件日志"
+      },
+      "description": {
+        "en": "The Session is the single source of truth for an agent's whole interaction history: an append-only log of typed SessionEvents. The LLM message history is derived from the log, never stored separately; replay is re-derivation from the same events.",
+        "zh": "Session 是 agent 全部交互历史的唯一事实源：类型化 SessionEvent 的追加式日志。LLM 消息历史从日志派生，绝不单独存储；回放就是基于同一批事件重新派生。"
+      },
+      "alternatives": {
+        "en": "Storing the message array directly would be simpler and faster to read, but every transform (fork, resume, compaction, telemetry, persistence) would need its own copy of history, and they would drift. One canonical log makes every consumer derive from the same facts.",
+        "zh": "直接存消息数组更简单、读取更快，但每个转换（fork、resume、compaction、遥测、持久化）都需要一份历史副本，且会互相漂移。一份规范日志让所有消费者从同一事实派生。"
+      },
+      "codeRefs": [
+        {
+          "path": "packages/core/session/src/types.ts",
+          "note": {
+            "en": "SessionEventMap — the merge-extensible append-only event vocabulary",
+            "zh": "SessionEventMap——可合并扩展的追加式事件词汇表"
+          }
+        },
+        {
+          "path": "docs/subsystems/session.md",
+          "note": {
+            "en": "§ Sessions — append-only log as source of truth",
+            "zh": "§ Sessions——追加式日志作为事实源"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scoped-tool-registry",
+      "title": {
+        "en": "Scoped Tool Registry with a Guarded Pipeline",
+        "zh": "作用域工具注册表与受保护的执行管线"
+      },
+      "description": {
+        "en": "ctx.tools owns the scoped tool registry and a guarded execution pipeline. Tool schemas join prompt assembly; execution passes through pre-execute / execute / post-execute events so policy lives at the harness level, not inside each tool.",
+        "zh": "ctx.tools 拥有作用域工具注册表和受保护的执行管线。工具 schema 参与提示词组装；执行经过 pre-execute / execute / post-execute 事件，使策略存在于 harness 层而不是每个工具内部。"
+      },
+      "alternatives": {
+        "en": "Letting each tool call the model or touch the filesystem directly would be simpler per tool, but safety and observability would fragment across implementations. A single guarded pipeline centralizes permission, logging, and cancellation.",
+        "zh": "让每个工具直接调用模型或触碰文件系统，对单个工具更简单，但安全性和可观测性会分散到各实现。单一受保护管线集中了权限、日志和取消。"
+      },
+      "codeRefs": [
+        {
+          "path": "docs/subsystems/tools.md",
+          "note": {
+            "en": "Scoped tool registry and guarded execution pipeline",
+            "zh": "作用域工具注册表与受保护的执行管线"
+          }
+        },
+        {
+          "path": "docs/architecture.md",
+          "note": {
+            "en": "§ Where new behavior goes — register on ctx.tools",
+            "zh": "§ 新行为放哪——注册到 ctx.tools"
+          }
+        }
+      ]
+    },
+    {
+      "id": "agent-interface",
+      "title": {
+        "en": "One Agent Interface, Swappable Drivers",
+        "zh": "统一 Agent 接口，可替换的驱动"
+      },
+      "description": {
+        "en": "core/agent defines the Agent interface, a live registry, and agent/* events (ctx.agents). core/agent-loop is the default driver implementing that interface (ctx.agentLoop). The loop is a plugin like any other — replaceable from configuration.",
+        "zh": "core/agent 定义 Agent 接口、实时注册表和 agent/* 事件（ctx.agents）。core/agent-loop 是实现该接口的默认驱动（ctx.agentLoop）。循环与其他插件一样，可从配置替换。"
+      },
+      "alternatives": {
+        "en": "Hardwiring the loop into the product would remove a layer of indirection, but then a different driver (a delegate to another product, a replay driver) would require editing core. The interface keeps the harness's behavior a consumer choice.",
+        "zh": "把循环硬编码进产品能省去一层间接，但那样不同的驱动（委托给另一个产品、回放驱动）就得改核心。接口让 harness 的行为成为消费方的选择。"
+      },
+      "codeRefs": [
+        {
+          "path": "docs/subsystems/core.md",
+          "note": {
+            "en": "core/agent — Agent interface, live registry, agent/* events",
+            "zh": "core/agent——Agent 接口、实时注册表、agent/* 事件"
+          }
+        }
+      ]
+    }
+  ],
+  "body": {
+    "en": "## Orienting in the repo\n\nSix packages form the harness spine, and each claims one stable `ctx` key:\n\n- `packages/core/session` → `ctx.sessions`\n- `packages/core/tools` → `ctx.tools`\n- `packages/core/agent` → `ctx.agents`\n- `packages/core/agent-loop` → `ctx.agentLoop`\n- `packages/core/system-prompt` → `ctx.systemPrompt`\n- `packages/llm/llm` → `ctx.llm`\n\n`docs/architecture.md` § *Core packages* is the map; `docs/subsystems/*.md` is the detail. Read this chapter as \"the spine, and the keys it claims\" — each key is a contract that other plugins depend on through `inject`.\n\n## The session is an append-only ledger\n\n`core/session` is the single source of truth for an agent's entire interaction history. The type `SessionEventMap` in `src/types.ts` defines the vocabulary of typed events, and the log is append-only. Think of it as a **ledger you can only write to** — nothing ever rewrites history, not the model's own retries, not user edits, not compaction.\n\nThe *append-only-session* decision is about derivation: the LLM message history is *derived* from the log (`deriveMessages()`), never stored separately. Every consumer — fork, resume, telemetry, persistence, the UI — derives from the same events, so they cannot drift. Replay is just re-deriving over the same log. The cost: reading history means projecting the log. The benefit: there is exactly one description of what happened.\n\n## A scoped registry with a guarded pipeline\n\n`core/tools` owns two things: the scoped tool registry and the guarded execution pipeline. Tools register their schemas into the registry, and those schemas join prompt assembly — the model sees the tool's shape because it was registered, not because something special-cased it.\n\nExecution is the interesting half. A tool call does not run directly; it passes through `pre-execute` → `execute` → `post-execute` events — think of it as going through a **security checkpoint**. That is the *scoped-tool-registry* decision: policy — permissions, logging, cancellation, sandboxing — lives at the harness level, centralized in one pipeline, instead of being re-implemented inside each tool. A tool author writes the capability; the harness owns the guardrails.\n\n## One agent interface, swappable drivers\n\n`core/agent` defines the `Agent` interface, keeps a *live* registry of running agents, and emits the `agent/*` events (`ctx.agents`). It implements nothing that loops. The default driver is `core/agent-loop`, which implements the interface and claims `ctx.agentLoop`.\n\nThe *agent-interface* decision is chapter 1's \"no privileged core\" made concrete: the loop is a plugin implementing an interface. A different driver — one that delegates turns to another product, a replay driver, a test double — registers under the same contract, and configuration picks which one boots. The harness's behavior becomes a consumer choice, not a compile-time fact.\n\n## How the spine holds together\n\nPrompt assembly pulls from `system-prompt`; the loop asks `llm` to stream; `tools` supplies schemas and guards execution; `session` records everything; `agent` tracks who is alive. Each package is small and owns its key. When you read a subsystem doc, keep asking: what key does this claim, and who injects it? That key is the seam through which the package participates in the product.\n\n## Reading guide\n\n- `docs/architecture.md` § *Core packages* — the map, then `docs/subsystems/session.md`, `docs/subsystems/tools.md`, `docs/subsystems/core.md`.\n- `packages/core/session/src/types.ts` — `SessionEventMap`, the vocabulary everything else derives from.\n- `packages/core/agent-loop/src/index.ts` — the default driver claiming `ctx.agentLoop`.",
+    "zh": "## 在仓库中定位\n\n六个包构成 harness 主干，每个认领一个稳定的 `ctx` key：\n\n- `packages/core/session` → `ctx.sessions`\n- `packages/core/tools` → `ctx.tools`\n- `packages/core/agent` → `ctx.agents`\n- `packages/core/agent-loop` → `ctx.agentLoop`\n- `packages/core/system-prompt` → `ctx.systemPrompt`\n- `packages/llm/llm` → `ctx.llm`\n\n`docs/architecture.md` § *Core packages* 是地图，`docs/subsystems/*.md` 是细节。把这一章读作\"主干，以及它认领的 key\"——每个 key 都是一份其他插件通过 `inject` 依赖的契约。\n\n## 会话是一本只记不改的账本\n\n`core/session` 是 agent 全部交互历史的唯一事实源。`src/types.ts` 中的 `SessionEventMap` 类型定义了类型化事件的词汇表，日志只追加。把它想成一本**只能写、不能改的账本**——历史从不会被改写，模型的自我重试、用户编辑、压缩都不行。\n\n*append-only-session* 决策的核心是派生：LLM 消息历史从日志*派生*（`deriveMessages()`），绝不单独存储。每个消费者——fork、resume、遥测、持久化、UI——都从同一批事件派生，因此不会漂移。回放就是基于同一份日志重新派生。代价：读历史意味着投影日志。收益：\"发生了什么\"只有一种描述。\n\n## 作用域注册表与安检门管线\n\n`core/tools` 拥有两样东西：作用域工具注册表和受保护的执行管线。工具把 schema 注册进注册表，schema 随即加入提示词组装——模型能看到工具的形状，是因为它被注册了，而不是因为有什么东西特判了它。\n\n执行才是更有意思的一半。工具调用不直接运行，而是穿过 `pre-execute` → `execute` → `post-execute` 事件——可以理解成过一道**安检门**。这就是 *scoped-tool-registry* 决策：策略——权限、日志、取消、沙箱——存在于 harness 层，集中在那一条管线里，而不是在每个工具内部重新实现。工具作者写能力；harness 拥有护栏。\n\n## 统一 agent 接口，可替换的驱动\n\n`core/agent` 定义 `Agent` 接口、维护运行中 agent 的*实时*注册表，并发出 `agent/*` 事件（`ctx.agents`）。它自己不实现任何循环。默认驱动是 `core/agent-loop`，它实现该接口并认领 `ctx.agentLoop`。\n\n*agent-interface* 决策是第一章\"没有特权核心\"的具体兑现：循环是一个实现接口的插件。不同的驱动——把 turn 委托给另一个产品的、回放驱动、测试替身——在同一个契约下注册，由配置决定启动哪个。harness 的行为成为消费方的选择，而不是编译期事实。\n\n## 主干如何协同\n\n提示词组装从 `system-prompt` 取料；循环让 `llm` 流式输出；`tools` 提供 schema 并守卫执行；`session` 记录一切；`agent` 跟踪谁还活着。每个包都很小，且拥有自己的 key。读子系统文档时持续问：这个认领了什么 key，谁 inject 它？那个 key 就是这个包参与产品的接缝。\n\n## 阅读指引\n\n- `docs/architecture.md` § *Core packages*——先看地图，再读 `docs/subsystems/session.md`、`docs/subsystems/tools.md`、`docs/subsystems/core.md`。\n- `packages/core/session/src/types.ts`——`SessionEventMap`，其余一切派生的词汇表。\n- `packages/core/agent-loop/src/index.ts`——认领 `ctx.agentLoop` 的默认驱动。"
+  }
+}

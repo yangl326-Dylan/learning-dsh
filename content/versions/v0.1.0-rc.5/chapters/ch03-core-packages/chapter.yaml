@@ -1,0 +1,74 @@
+# Chapter 03 — Core Packages
+# Content contract: docs/contract/content-contract.md
+
+id: ch03-core-packages
+order: 3
+title:
+  en: Core Packages
+  zh: 核心包矩阵
+summary:
+  en: The packages that own the harness spine — session, tools, agent, agent-loop, system-prompt, llm — and the ctx keys they claim.
+  zh: 拥有 harness 主干的服务包——session、tools、agent、agent-loop、system-prompt、llm——以及它们认领的 ctx key。
+topics:
+  - packages/core/session
+  - packages/core/tools
+  - packages/core/agent
+  - packages/core/agent-loop
+  - packages/core/system-prompt
+  - packages/llm/llm
+diagrams:
+  - core-package-map.svg
+decisions:
+  - id: append-only-session
+    title:
+      en: The Session Is an Append-Only Event Log
+      zh: 会话是追加式事件日志
+    description:
+      en: "The Session is the single source of truth for an agent's whole interaction history: an append-only log of typed SessionEvents. The LLM message history is derived from the log, never stored separately; replay is re-derivation from the same events."
+      zh: Session 是 agent 全部交互历史的唯一事实源：类型化 SessionEvent 的追加式日志。LLM 消息历史从日志派生，绝不单独存储；回放就是基于同一批事件重新派生。
+    alternatives:
+      en: Storing the message array directly would be simpler and faster to read, but every transform (fork, resume, compaction, telemetry, persistence) would need its own copy of history, and they would drift. One canonical log makes every consumer derive from the same facts.
+      zh: 直接存消息数组更简单、读取更快，但每个转换（fork、resume、compaction、遥测、持久化）都需要一份历史副本，且会互相漂移。一份规范日志让所有消费者从同一事实派生。
+    codeRefs:
+      - path: packages/core/session/src/types.ts
+        note:
+          en: 'SessionEventMap — the merge-extensible append-only event vocabulary'
+          zh: 'SessionEventMap——可合并扩展的追加式事件词汇表'
+      - path: docs/subsystems/session.md
+        note:
+          en: '§ Sessions — append-only log as source of truth'
+          zh: '§ Sessions——追加式日志作为事实源'
+  - id: scoped-tool-registry
+    title:
+      en: Scoped Tool Registry with a Guarded Pipeline
+      zh: 作用域工具注册表与受保护的执行管线
+    description:
+      en: ctx.tools owns the scoped tool registry and a guarded execution pipeline. Tool schemas join prompt assembly; execution passes through pre-execute / execute / post-execute events so policy lives at the harness level, not inside each tool.
+      zh: ctx.tools 拥有作用域工具注册表和受保护的执行管线。工具 schema 参与提示词组装；执行经过 pre-execute / execute / post-execute 事件，使策略存在于 harness 层而不是每个工具内部。
+    alternatives:
+      en: Letting each tool call the model or touch the filesystem directly would be simpler per tool, but safety and observability would fragment across implementations. A single guarded pipeline centralizes permission, logging, and cancellation.
+      zh: 让每个工具直接调用模型或触碰文件系统，对单个工具更简单，但安全性和可观测性会分散到各实现。单一受保护管线集中了权限、日志和取消。
+    codeRefs:
+      - path: docs/subsystems/tools.md
+        note:
+          en: 'Scoped tool registry and guarded execution pipeline'
+          zh: '作用域工具注册表与受保护的执行管线'
+      - path: docs/architecture.md
+        note:
+          en: '§ Where new behavior goes — register on ctx.tools'
+          zh: '§ 新行为放哪——注册到 ctx.tools'
+  - id: agent-interface
+    title:
+      en: One Agent Interface, Swappable Drivers
+      zh: 统一 Agent 接口，可替换的驱动
+    description:
+      en: core/agent defines the Agent interface, a live registry, and agent/* events (ctx.agents). core/agent-loop is the default driver implementing that interface (ctx.agentLoop). The loop is a plugin like any other — replaceable from configuration.
+      zh: core/agent 定义 Agent 接口、实时注册表和 agent/* 事件（ctx.agents）。core/agent-loop 是实现该接口的默认驱动（ctx.agentLoop）。循环与其他插件一样，可从配置替换。
+    alternatives:
+      en: Hardwiring the loop into the product would remove a layer of indirection, but then a different driver (a delegate to another product, a replay driver) would require editing core. The interface keeps the harness's behavior a consumer choice.
+      zh: 把循环硬编码进产品能省去一层间接，但那样不同的驱动（委托给另一个产品、回放驱动）就得改核心。接口让 harness 的行为成为消费方的选择。
+    codeRefs:
+      - path: docs/subsystems/core.md
+        note:
+          en: 'core/agent — Agent interface, live registry, agent/* events'
+          zh: 'core/agent——Agent 接口、实时注册表、agent/* 事件'

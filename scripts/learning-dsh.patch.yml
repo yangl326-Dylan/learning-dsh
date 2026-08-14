@@ -1,0 +1,10 @@
+# Quick manual run of the local learning-dsh plugin inside the web profile.
+# Usage: dsh --profile web --patch <this-file>
+# The plugin row references the compiled plugin module by absolute path;
+# loader imports it, Cordis injects httpServer (already mounted by dsh-web-app).
+- insert:
+    - id: learning-dsh
+      name: /Users/mac/code/learning-dsh/packages/plugin/lib/index.js
+      config:
+        mountPath: /learning
+        title: Learning dsh

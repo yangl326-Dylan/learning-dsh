@@ -1,0 +1,114 @@
+{
+  "id": "ch02-profiles-and-bundles",
+  "order": 2,
+  "title": {
+    "en": "Profiles and Bundles",
+    "zh": "Profile 与 Bundle 组合层"
+  },
+  "summary": {
+    "en": "How a running dsh is composed at boot — ordered layers of bundles, profiles, and patches that turn an empty plugin tree into a product.",
+    "zh": "运行中的 dsh 如何在启动时被组合——bundle、profile 与 patch 的分层，把一个空插件树组装成产品。"
+  },
+  "topics": [
+    "packages/boot/app-boot",
+    "packages/bundle/base",
+    "packages/bundle/web-app",
+    "packages/bundle/headless"
+  ],
+  "diagrams": [
+    "composition-layers.svg"
+  ],
+  "decisions": [
+    {
+      "id": "layered-composition",
+      "title": {
+        "en": "Layered Composition over Monolithic Boot",
+        "zh": "分层组合而非单体启动"
+      },
+      "description": {
+        "en": "A profile stacks bundles in order; each bundle inserts configuration rows. Layers apply to an empty entry list: bundles in listed order, then the profile's cordis.patch.yml, then the home-level one, then any --patch overlay. What boots is a tree, not a program.",
+        "zh": "profile 按顺序堆叠 bundle；每个 bundle 插入配置行。各层依次应用到空条目列表：按列出顺序的 bundle → profile 的 cordis.patch.yml → 家目录级 patch → 任意 --patch 覆盖。启动的是一个\"树\"，而不是一个\"程序\"。"
+      },
+      "alternatives": {
+        "en": "A monolithic entry point that hardcodes every plugin would be simpler to reason about, but every variation (web, headless, custom) would need its own copy of the boot logic. Layers let the same base bundle serve every surface, and composition, flag derivation, and config dumps share one code path.",
+        "zh": "硬编码所有插件的单体入口更容易理解，但每个变体（web、headless、自定义）都需要一份启动逻辑副本。分层让同一个 base bundle 服务所有表面，且组合、flag 推导与配置导出共享同一代码路径。"
+      },
+      "codeRefs": [
+        {
+          "path": "packages/boot/app-boot/src/index.ts",
+          "note": {
+            "en": "Profile machinery: resolveProfileDir / loadProfile / composeEntries",
+            "zh": "Profile 机制：resolveProfileDir / loadProfile / composeEntries"
+          }
+        },
+        {
+          "path": "docs/architecture.md",
+          "note": {
+            "en": "§ Profiles and bundles — layer order",
+            "zh": "§ Profiles 与 bundles——层顺序"
+          }
+        }
+      ],
+      "insight": {
+        "en": "dsh --profile web --dump-config prints the exact tree your machine boots — every row is patchable.",
+        "zh": "dsh --profile web --dump-config 会打印你机器启动时的完整树——每一行都可被 patch 覆盖。"
+      }
+    },
+    {
+      "id": "patch-over-edit",
+      "title": {
+        "en": "Patch by Id Instead of Editing Source",
+        "zh": "按 Id 打补丁而非修改源码"
+      },
+      "description": {
+        "en": "A patch targets a row by id and replaces its whole config, or inserts new rows. Bundles ship their own patches; users patch on top. The dsh field in package.json declares a profile's bundles (dsh.profile) or a bundle's patch file (dsh.bundle).",
+        "zh": "patch 按 id 定位一行并整体替换其 config，或插入新行。bundle 自带 patch，用户在其上再打补丁。package.json 中的 dsh 字段声明 profile 的 bundles（dsh.profile）或 bundle 的 patch 文件（dsh.bundle）。"
+      },
+      "alternatives": {
+        "en": "Forking or editing shipped config files would work but would be overwritten by every upgrade and impossible to audit. Id-targeted patches are declarative, upgrade-safe, and reviewable in version control.",
+        "zh": "fork 或直接编辑随附配置可以工作，但每次升级都会被覆盖且无法审计。按 id 定位的 patch 是声明式的、升级安全的，并且能在版本控制中审查。"
+      },
+      "codeRefs": [
+        {
+          "path": "packages/boot/app-boot/src/index.ts",
+          "note": {
+            "en": "loadOptionalPatches parses a profile cordis.patch.yml",
+            "zh": "loadOptionalPatches 解析 profile 的 cordis.patch.yml"
+          }
+        }
+      ],
+      "insight": {
+        "en": "A patch replaces the whole matched config — there is no deep-merge. Overrides must restate every field they keep.",
+        "zh": "patch 会整体替换匹配行的配置——没有深合并。覆盖时必须重述所有保留的字段。"
+      }
+    },
+    {
+      "id": "profile-templates",
+      "title": {
+        "en": "Profiles Are Named, Reusable Compositions",
+        "zh": "Profile 是可命名的可复用组合"
+      },
+      "description": {
+        "en": "A profile is a directory under $DSH_HOME/profiles/<name> holding a package.json with out-of-tree plugin dependencies plus the dsh.profile manifest. web and headless ship as templates that auto-initialize on first use.",
+        "zh": "profile 是 $DSH_HOME/profiles/<name> 下的一个目录，包含带 out-of-tree 插件依赖的 package.json 以及 dsh.profile 清单。web 和 headless 作为模板随附，首次使用时自动初始化。"
+      },
+      "alternatives": {
+        "en": "A single fixed startup configuration would be simplest, but then every user with different needs would need to maintain a fork. Named profiles make \"web with extra plugins\" a composition you can create with dsh plugin, not a fork you must maintain.",
+        "zh": "单一固定的启动配置最简单，但那样每个需求不同的用户都需要维护一份 fork。命名 profile 让\"带额外插件的 web\"变成可以用 dsh plugin 创建的组合，而不是必须维护的 fork。"
+      },
+      "codeRefs": [
+        {
+          "path": "packages/boot/app-boot/README.md",
+          "note": {
+            "en": "§ Profiles — directory layout and PROFILE_TEMPLATES",
+            "zh": "§ Profiles——目录布局与 PROFILE_TEMPLATES"
+          }
+        }
+      ]
+    }
+  ],
+  "body": {
+    "en": "## Orienting in the repo\n\nComposition lives in `packages/boot/app-boot` — a small package whose only job is turning configuration files into a running plugin tree. The three bundle packages show what composition feels like from the outside: `packages/bundle/base` (the minimal surface), `packages/bundle/web-app`, and `packages/bundle/headless`. Each is a directory of YAML plus a `package.json` that declares its place in the system.\n\nStart from the chapter summary's claim: what boots is a **tree**, not a program. There is no executable that \"knows how to run dsh.\" There is machinery that reads ordered layers and produces a tree, and then Cordis boots that tree.\n\n## The layers, in order\n\n`composeEntries` in `app-boot` applies layers to an *empty entry list*:\n\n1. Bundles, in the order the profile lists them — each bundle inserts configuration rows.\n2. The profile's own `cordis.patch.yml` (loaded by `loadOptionalPatches`).\n3. The home-level `cordis.patch.yml`.\n4. Any `--patch` overlay passed on the command line.\n\nEach layer targets rows by `id` and either replaces the whole config of a matched row or inserts new rows. The `dsh` field in `package.json` declares the shape: `dsh.profile` lists a profile's bundles, `dsh.bundle` points at a bundle's patch file. This is the *layered-composition* decision: one code path (`resolveProfileDir` / `loadProfile` / `composeEntries`) serves web, headless, and every custom profile — variation is data, not code.\n\n## Patch by id, not by edit\n\nThe *patch-over-edit* decision is a rule with teeth. A patch row replaces the *entire* matched config — there is no deep-merge. Want to keep a field? You restate it. That looks annoying until you realize it is exactly what makes patches safe: the effect is total and reviewable, never a silent merge that depends on field-by-field semantics.\n\nBundles ship their own patches, and users patch on top. Upgrade safety is structural: when a bundle updates, your home-level patch rows still target the same ids, and if a row disappears you see it immediately instead of discovering a half-merged config later. And because everything is declarative YAML in version control, \"what did I change\" is a diff, not a memory.\n\n## Profiles are named compositions\n\nA profile is a directory under `$DSH_HOME/profiles/<name>` containing a `package.json` (with out-of-tree plugin dependencies) plus the `dsh.profile` manifest. `web` and `headless` ship as templates (`PROFILE_TEMPLATES` in `app-boot`) that auto-initialize on first use — you type `dsh --profile web`, and the directory materializes with its dependencies installed.\n\nThe *profile-templates* decision answers a real problem: a single fixed startup configuration would force every user with different needs to maintain a fork. A named profile is a composition you create with `dsh plugin`, not a fork you must maintain. \"Web with my extra plugins\" is a profile that stacks the web bundle and your own rows.\n\nThe fastest way to see the whole machine: `dsh --profile web --dump-config` prints the exact tree your machine boots — every row patchable.\n\n## Reading guide\n\n- `packages/boot/app-boot/src/index.ts` — `resolveProfileDir`, `loadProfile`, `composeEntries`, `loadOptionalPatches`; read in that order.\n- `packages/boot/app-boot/README.md` — directory layout and `PROFILE_TEMPLATES`.\n- Then run `dsh --profile web --dump-config` and trace where each row came from.",
+    "zh": "## 在仓库中定位\n\n组合机制在 `packages/boot/app-boot`——一个小包，唯一职责就是把配置文件变成一棵正在运行的插件树。三个 bundle 包展示了组合从外部看是什么样：`packages/bundle/base`（最小表面）、`packages/bundle/web-app`、`packages/bundle/headless`。每个都是一堆 YAML 加一个声明自己在系统中位置的 `package.json`。\n\n从章节摘要的主张出发：启动的是一个**树**，而不是一个\"程序\"。不存在一个\"知道如何运行 dsh\"的可执行文件。存在的是一套按顺序读取分层、产出树的机制，然后由 Cordis 启动这棵树。\n\n## 分层，按顺序\n\n`app-boot` 中的 `composeEntries` 把各层应用到*空条目列表*：\n\n1. Bundle，按 profile 列出的顺序——每个 bundle 插入配置行。\n2. Profile 自己的 `cordis.patch.yml`（由 `loadOptionalPatches` 加载）。\n3. 家目录级的 `cordis.patch.yml`。\n4. 命令行传入的任意 `--patch` 覆盖。\n\n每层按 `id` 定位行，整体替换匹配行的 config，或插入新行。`package.json` 中的 `dsh` 字段声明形态：`dsh.profile` 列出 profile 的 bundles，`dsh.bundle` 指向 bundle 的 patch 文件。这就是 *layered-composition* 决策：`resolveProfileDir` / `loadProfile` / `composeEntries` 这一条代码路径服务 web、headless 和每个自定义 profile——变化是数据，不是代码。\n\n## 按 id 打补丁，而不是改源码\n\n*patch-over-edit* 决策是一条有牙齿的规则。patch 行会整体替换匹配行的 config——没有深合并。想保留某个字段？那就重述它。这看起来烦人，直到你意识到这正是 patch 安全的原因：效果是整体且可审查的，永远不会是依赖逐字段语义的静默合并。\n\nBundle 自带 patch，用户在其上再打补丁。升级安全是结构性的：bundle 更新时，你家目录级的 patch 行仍然指向相同的 id；如果某行消失了，你会立刻看到，而不是之后才发现一个半合并的配置。而且因为一切都是版本控制里的声明式 YAML，\"我改了什么\"是一个 diff，而不是一段记忆。\n\n## Profile 是可命名的组合\n\nProfile 是 `$DSH_HOME/profiles/<name>` 下的一个目录，包含 `package.json`（带 out-of-tree 插件依赖）和 `dsh.profile` 清单。`web` 和 `headless` 作为模板随附（`app-boot` 里的 `PROFILE_TEMPLATES`），首次使用时自动初始化——你输入 `dsh --profile web`，目录就带着依赖实例化出来。\n\n*profile-templates* 决策回答了一个真实问题：单一固定启动配置会迫使每个需求不同的用户维护一份 fork。命名 profile 是用 `dsh plugin` 创建的组合，而不是必须维护的 fork。\"带额外插件的 web\"就是一个叠加了 web bundle 和你自己行的 profile。\n\n看到整台机器最快的办法：`dsh --profile web --dump-config` 会打印你机器启动时的完整树——每一行都可被 patch 覆盖。\n\n## 阅读指引\n\n- `packages/boot/app-boot/src/index.ts`——按顺序读 `resolveProfileDir`、`loadProfile`、`composeEntries`、`loadOptionalPatches`。\n- `packages/boot/app-boot/README.md`——目录布局与 `PROFILE_TEMPLATES`。\n- 然后运行 `dsh --profile web --dump-config`，追踪每一行来自哪一层。"
+  }
+}

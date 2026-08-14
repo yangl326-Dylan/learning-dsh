@@ -1,0 +1,6 @@
+# learning-dsh bundle layer: mounts the learning page plugin when a profile
+# lists @dylan/learning-dsh in dsh.profile.bundles. Plugin rows reference the
+# package by name so Node resolution finds the installed code.
+- insert:
+    - id: learning-dsh
+      name: '@dylan/learning-dsh'

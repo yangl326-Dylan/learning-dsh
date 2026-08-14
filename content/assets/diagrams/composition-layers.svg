@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="660" viewBox="0 0 1100 660" fill="none">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1100" height="660" rx="12" fill="#0f172a"/>
+  <text x="550" y="36" text-anchor="middle" fill="#e2e8f0" font-size="17" font-weight="bold" font-family="system-ui">Profiles and Bundles — layered composition</text>
+
+  <!-- Layer label column -->
+  <text x="120" y="86" text-anchor="middle" fill="#64748b" font-size="10" font-weight="bold" font-family="system-ui">order of application</text>
+
+  <!-- Layer 1: patch overlay (command line) -->
+  <g font-family="system-ui">
+    <rect x="40" y="100" width="1000" height="70" rx="10" fill="#1e3a5f" stroke="#F59E0B" stroke-width="1.6"/>
+    <text x="70" y="130" fill="#fcd34d" font-size="12" font-weight="bold">1 · --patch overlay</text>
+    <text x="70" y="150" fill="#94a3b8" font-size="9.5">command line · last layer wins · replaces the whole matched config</text>
+    <text x="1010" y="140" text-anchor="end" fill="#64748b" font-size="9.5">highest priority</text>
+  </g>
+  <line x1="540" y1="170" x2="540" y2="192" stroke="#64748b" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2: home patch -->
+  <g font-family="system-ui">
+    <rect x="40" y="194" width="1000" height="70" rx="10" fill="#1e3a5f" stroke="#F59E0B" stroke-width="1.6"/>
+    <text x="70" y="224" fill="#fcd34d" font-size="12" font-weight="bold">2 · home cordis.patch.yml</text>
+    <text x="70" y="244" fill="#94a3b8" font-size="9.5">user-level · rows targeted by id, no deep-merge</text>
+  </g>
+  <line x1="540" y1="264" x2="540" y2="286" stroke="#64748b" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- Layer 3: profile patch -->
+  <g font-family="system-ui">
+    <rect x="40" y="288" width="1000" height="70" rx="10" fill="#1e3a5f" stroke="#F59E0B" stroke-width="1.6"/>
+    <text x="70" y="318" fill="#fcd34d" font-size="12" font-weight="bold">3 · profile cordis.patch.yml</text>
+    <text x="70" y="338" fill="#94a3b8" font-size="9.5">loadOptionalPatches · profile-level rows</text>
+  </g>
+  <line x1="540" y1="358" x2="540" y2="380" stroke="#64748b" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- Layer 4: bundles -->
+  <g font-family="system-ui">
+    <rect x="40" y="382" width="1000" height="70" rx="10" fill="#3b1e5f" stroke="#8B5CF6" stroke-width="1.6"/>
+    <text x="70" y="412" fill="#c4b5fd" font-size="12" font-weight="bold">4 · bundles, in profile order</text>
+    <text x="70" y="432" fill="#94a3b8" font-size="9.5">base → web-app → headless · each inserts configuration rows</text>
+  </g>
+  <line x1="540" y1="452" x2="540" y2="474" stroke="#64748b" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- Layer 5: profile directory -->
+  <g font-family="system-ui">
+    <rect x="40" y="476" width="1000" height="70" rx="10" fill="#0b1526" stroke="#475569" stroke-width="1.6"/>
+    <text x="70" y="506" fill="#e2e8f0" font-size="12" font-weight="bold">5 · profile directory ($DSH_HOME/profiles/&lt;name&gt;)</text>
+    <text x="70" y="526" fill="#94a3b8" font-size="9.5">package.json (dsh.profile) + manifest · web / headless auto-initialize as templates</text>
+  </g>
+
+  <!-- Result -->
+  <line x1="540" y1="546" x2="540" y2="572" stroke="#3B82F6" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <rect x="250" y="574" width="600" height="56" rx="10" fill="#1e293b" stroke="#3B82F6" stroke-width="1.6"/>
+  <text x="550" y="598" text-anchor="middle" fill="#93c5fd" font-size="12.5" font-weight="bold" font-family="system-ui">empty entry list → running plugin tree</text>
+  <text x="550" y="616" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="system-ui">rows targeted by id · every row patchable</text>
+
+  <!-- Takeaway -->
+  <text x="550" y="652" text-anchor="middle" fill="#64748b" font-size="10" font-family="system-ui">What boots is a tree, not a program — dsh --profile web --dump-config prints the exact tree your machine boots.</text>
+</svg>

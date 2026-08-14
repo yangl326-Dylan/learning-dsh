@@ -1,0 +1,68 @@
+# Chapter 08 — Extension Map
+# Content contract: docs/contract/content-contract.md
+
+id: ch08-extension-map
+order: 8
+title:
+  en: Extension Map
+  zh: 扩展点地图
+summary:
+  en: Where new behavior goes — the documented extension points, the register-don't-edit rule, and why locking to a version matters while dsh is in developer preview.
+  zh: 新行为放哪里——文档化的扩展点、"注册而非修改"规则，以及 developer preview 阶段为什么锁定版本很重要。
+topics:
+  - docs/architecture.md
+  - packages/bundle/base
+diagrams:
+  - extension-map.svg
+decisions:
+  - id: extension-points-over-editing
+    title:
+      en: New Behavior Attaches to a Documented Extension Point
+      zh: 新行为挂接到文档化的扩展点
+    description:
+      en: dsh maintains a mechanism map — adding a model provider means registering its adapter on ctx.llm; adding a model-facing capability means registering on ctx.tools; adding shell execution means registering a ctx.shell backend. Changing the loop itself updates the map. You extend by registering, not by editing.
+      zh: dsh 维护着一张机制地图——添加模型 provider = 在 ctx.llm 注册适配器；添加模型面对能力 = 注册到 ctx.tools；添加 shell 执行 = 注册 ctx.shell 后端。修改循环本身要更新这张地图。扩展靠注册，不靠修改。
+    alternatives:
+      en: The alternative is editing whichever package seems closest — fast for one change, but every edit forks the upstream behavior and breaks on the next upgrade. A documented map makes the extension surface stable and reviewable.
+      zh: 替代做法是修改看似最接近的包——单次改动很快，但每次修改都分叉了上游行为，下次升级就会破坏。文档化地图让扩展面稳定且可审查。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Where new behavior goes — the mechanism map'
+          zh: '§ 新行为放哪——机制地图'
+    insight:
+      en: "The map is a contract: if your goal is not on it, you are probably changing the loop — or should be."
+      zh: 这张地图是契约：如果你的目标不在上面，你很可能在改循环本身——或者本该如此。
+  - id: add-by-registering
+    title:
+      en: Add a Capability by Registering, Never by Patching
+      zh: 通过注册添加能力，绝不靠修补
+    description:
+      en: Adding a tool means registering it in the scoped registry — its schema joins prompt assembly automatically. Adding an LLM adapter means registering on ctx.llm. The loop code never changes for a new capability; the product's behavior grows by composition.
+      zh: 添加工具 = 注册到作用域注册表——它的 schema 自动加入提示词组装。添加 LLM 适配器 = 注册到 ctx.llm。新能力到来时循环代码从不修改；产品行为靠组合增长。
+    alternatives:
+      en: Editing the loop to special-case a new capability is the tempting shortcut; it works once and is never safe again. Registration keeps every behavior addition additive and reversible.
+      zh: 修改循环为某个新能力特判是诱人的捷径；它成功一次，就再也不安全。注册让每次行为添加都是增量式、可逆的。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Where new behavior goes — tool/schema registration'
+          zh: '§ 新行为放哪——工具/schema 注册'
+  - id: preview-versioning
+    title:
+      en: Developer Preview Means Breaking Changes Will Come
+      zh: Developer Preview 意味着破坏性变更会来
+    description:
+      en: dsh is in developer preview and iterating rapidly — compatibility-breaking changes are expected. The learning content locks to source commits (sourceRef), so a chapter always points at the exact code it describes; when the next version lands, content for it is added alongside, never overwriting the old.
+      zh: dsh 处于 developer preview 且迭代迅速——破坏性兼容变更随时会来。学习内容锁定源码 commit（sourceRef），章节总是指向它所描述的精确代码；新版本发布时，为新版本新增内容，而不是覆盖旧内容。
+    alternatives:
+      en: Following master continuously would always be current, but the content would describe a moving target and older readers would lose the version that matched their checkout. Version-pinned content is stable even as upstream breaks.
+      zh: 持续跟随 master 永远最新，但内容描述的是移动靶，旧读者会失去与他们的 checkout 匹配的版本。锁定版本的内容即使上游破坏也保持稳定。
+    codeRefs:
+      - path: README.md
+        note:
+          en: 'Developer preview — THERE WILL BE COMPATIBILITY-BREAKING CHANGES'
+          zh: 'Developer preview——将会有破坏性兼容变更'
+    insight:
+      en: "This learning page itself is the worked example: it pins content to a sourceRef commit and adds versions incrementally."
+      zh: 这个学习页面本身就是实例：内容锁定 sourceRef commit，版本增量添加。

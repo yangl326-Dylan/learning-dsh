@@ -1,0 +1,74 @@
+# Chapter 02 — Profiles and Bundles
+# Content contract: docs/contract/content-contract.md
+
+id: ch02-profiles-and-bundles
+order: 2
+title:
+  en: Profiles and Bundles
+  zh: Profile 与 Bundle 组合层
+summary:
+  en: How a running dsh is composed at boot — ordered layers of bundles, profiles, and patches that turn an empty plugin tree into a product.
+  zh: 运行中的 dsh 如何在启动时被组合——bundle、profile 与 patch 的分层，把一个空插件树组装成产品。
+topics:
+  - packages/boot/app-boot
+  - packages/bundle/base
+  - packages/bundle/web-app
+  - packages/bundle/headless
+diagrams:
+  - composition-layers.svg
+decisions:
+  - id: layered-composition
+    title:
+      en: Layered Composition over Monolithic Boot
+      zh: 分层组合而非单体启动
+    description:
+      en: "A profile stacks bundles in order; each bundle inserts configuration rows. Layers apply to an empty entry list: bundles in listed order, then the profile's cordis.patch.yml, then the home-level one, then any --patch overlay. What boots is a tree, not a program."
+      zh: profile 按顺序堆叠 bundle；每个 bundle 插入配置行。各层依次应用到空条目列表：按列出顺序的 bundle → profile 的 cordis.patch.yml → 家目录级 patch → 任意 --patch 覆盖。启动的是一个"树"，而不是一个"程序"。
+    alternatives:
+      en: A monolithic entry point that hardcodes every plugin would be simpler to reason about, but every variation (web, headless, custom) would need its own copy of the boot logic. Layers let the same base bundle serve every surface, and composition, flag derivation, and config dumps share one code path.
+      zh: 硬编码所有插件的单体入口更容易理解，但每个变体（web、headless、自定义）都需要一份启动逻辑副本。分层让同一个 base bundle 服务所有表面，且组合、flag 推导与配置导出共享同一代码路径。
+    codeRefs:
+      - path: packages/boot/app-boot/src/index.ts
+        note:
+          en: 'Profile machinery: resolveProfileDir / loadProfile / composeEntries'
+          zh: 'Profile 机制：resolveProfileDir / loadProfile / composeEntries'
+      - path: docs/architecture.md
+        note:
+          en: '§ Profiles and bundles — layer order'
+          zh: '§ Profiles 与 bundles——层顺序'
+    insight:
+      en: dsh --profile web --dump-config prints the exact tree your machine boots — every row is patchable.
+      zh: dsh --profile web --dump-config 会打印你机器启动时的完整树——每一行都可被 patch 覆盖。
+  - id: patch-over-edit
+    title:
+      en: Patch by Id Instead of Editing Source
+      zh: 按 Id 打补丁而非修改源码
+    description:
+      en: A patch targets a row by id and replaces its whole config, or inserts new rows. Bundles ship their own patches; users patch on top. The dsh field in package.json declares a profile's bundles (dsh.profile) or a bundle's patch file (dsh.bundle).
+      zh: patch 按 id 定位一行并整体替换其 config，或插入新行。bundle 自带 patch，用户在其上再打补丁。package.json 中的 dsh 字段声明 profile 的 bundles（dsh.profile）或 bundle 的 patch 文件（dsh.bundle）。
+    alternatives:
+      en: Forking or editing shipped config files would work but would be overwritten by every upgrade and impossible to audit. Id-targeted patches are declarative, upgrade-safe, and reviewable in version control.
+      zh: fork 或直接编辑随附配置可以工作，但每次升级都会被覆盖且无法审计。按 id 定位的 patch 是声明式的、升级安全的，并且能在版本控制中审查。
+    codeRefs:
+      - path: packages/boot/app-boot/src/index.ts
+        note:
+          en: 'loadOptionalPatches parses a profile cordis.patch.yml'
+          zh: 'loadOptionalPatches 解析 profile 的 cordis.patch.yml'
+    insight:
+      en: A patch replaces the whole matched config — there is no deep-merge. Overrides must restate every field they keep.
+      zh: patch 会整体替换匹配行的配置——没有深合并。覆盖时必须重述所有保留的字段。
+  - id: profile-templates
+    title:
+      en: Profiles Are Named, Reusable Compositions
+      zh: Profile 是可命名的可复用组合
+    description:
+      en: A profile is a directory under $DSH_HOME/profiles/<name> holding a package.json with out-of-tree plugin dependencies plus the dsh.profile manifest. web and headless ship as templates that auto-initialize on first use.
+      zh: profile 是 $DSH_HOME/profiles/<name> 下的一个目录，包含带 out-of-tree 插件依赖的 package.json 以及 dsh.profile 清单。web 和 headless 作为模板随附，首次使用时自动初始化。
+    alternatives:
+      en: A single fixed startup configuration would be simplest, but then every user with different needs would need to maintain a fork. Named profiles make "web with extra plugins" a composition you can create with dsh plugin, not a fork you must maintain.
+      zh: 单一固定的启动配置最简单，但那样每个需求不同的用户都需要维护一份 fork。命名 profile 让"带额外插件的 web"变成可以用 dsh plugin 创建的组合，而不是必须维护的 fork。
+    codeRefs:
+      - path: packages/boot/app-boot/README.md
+        note:
+          en: '§ Profiles — directory layout and PROFILE_TEMPLATES'
+          zh: '§ Profiles——目录布局与 PROFILE_TEMPLATES'

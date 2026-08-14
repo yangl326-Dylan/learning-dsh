@@ -1,0 +1,70 @@
+# Chapter 04 — Event Domains
+# Content contract: docs/contract/content-contract.md
+
+id: ch04-event-domains
+order: 4
+title:
+  en: Event Domains
+  zh: 事件三域
+summary:
+  en: Events are the extension points of dsh — three domains (session, agent, capability) with four dispatch modes, and the rule for picking the right one.
+  zh: 事件是 dsh 的扩展点——三个领域（session、agent、capability）四种分发模式，以及挑选正确领域/模式的规则。
+topics:
+  - docs/event-producer-consumer.md
+  - docs/architecture.md
+  - vendor/cordis
+diagrams:
+  - event-domains.svg
+decisions:
+  - id: durable-vs-live
+    title:
+      en: Durable Facts vs Live Interception
+      zh: 持久事实与实时拦截
+    description:
+      en: Session events are durable facts appended to the log and broadcast through session/event — use one when the fact must survive a reload. Agent events (agent/*) carry a live Agent — use one to observe or intercept work in flight. Capability events attach policy and adapters to a seam without importing the loop.
+      zh: session 事件是追加到日志并通过 session/event 广播的持久事实——当事实必须跨重载存活时使用它。agent 事件（agent/*）携带实时 Agent——用于观察或拦截进行中的工作。capability 事件把策略和适配器挂到接缝上，而不 import 循环。
+    alternatives:
+      en: "One giant event namespace would be simpler to grep, but would blur the durability contract: listeners would not know whether a fact survives reload. Splitting the domains makes the durability and liveness of every event part of its public contract."
+      zh: 单一巨型事件命名空间更容易检索，但会模糊持久性契约：监听者不知道一个事实是否跨重载存活。划分领域让每个事件的持久性与实时性成为其公共契约的一部分。
+    codeRefs:
+      - path: docs/architecture.md
+        note:
+          en: '§ Events — session / agent / capability domains'
+          zh: '§ Events——session / agent / capability 三个领域'
+      - path: docs/event-producer-consumer.md
+        note:
+          en: 'Every event''s producers and consumers'
+          zh: '每个事件的生产者与消费者'
+    insight:
+      en: Picking the right event domain is the first decision in most changes to dsh.
+      zh: 挑选正确的事件领域，是大多数 dsh 改动中的第一个决策。
+  - id: dispatch-modes
+    title:
+      en: Four Dispatch Modes as a Public Contract
+      zh: 四种分发模式作为公共契约
+    description:
+      en: "Every event declares one dispatch mode: emit (observe, not awaited), waterfall (wrapped in order, value passes through), parallel (all listeners in parallel, awaited), serial (in order, awaited, value passes). The mode is part of the event's contract and is documented with @mode so the catalog can check declarations against dispatch sites."
+      zh: 每个事件声明一种分发模式：emit（观察，不等待）、waterfall（按序包装，值传递）、parallel（所有监听者并行，等待）、serial（按序，等待，值传递）。模式是事件契约的一部分，用 @mode 记录，目录生成器可校验声明与分发点一致。
+    alternatives:
+      en: Using one dispatch style everywhere would be simpler to learn, but observation, fan-out, wrapping, and ordered decision each have different semantics — collapsing them forces listeners to reimplement the missing semantics or misbehave silently.
+      zh: 处处使用同一种分发风格更容易学习，但观察、扇出、包装、有序决策各有不同语义——合并它们会迫使监听者重新实现缺失的语义，或默默出错。
+    codeRefs:
+      - path: docs/cordis-primer.md
+        note:
+          en: '§ Dispatch Modes table'
+          zh: '§ 分发模式表'
+  - id: waterfall-middleware
+    title:
+      en: Waterfall Is Around-Middleware
+      zh: Waterfall 是 Around 中间件
+    description:
+      en: "ctx.waterfall is around-middleware: a listener receives (...args, next); call next() to delegate the possibly wrapped result downstream; return without next() to short-circuit. For single-decision events, short-circuiting is the design — a policy listener owns the decision by not delegating."
+      zh: ctx.waterfall 是 around 中间件：监听者收到 (...args, next)；调用 next() 把可能被包装的结果委托给下游；不调用 next() 直接返回即短路。对单决策事件，短路就是设计——策略监听者通过不委托来拥有决策。
+    alternatives:
+      en: Pre/post hook pairs (before()/after()) are the classic alternative, but they cannot wrap — a listener cannot replace the value flowing downstream. Waterfall's next() lets listeners both observe and transform in one registration.
+      zh: 经典的替代方案是 before()/after() 前后钩子对，但它们无法包装——监听者无法替换流向 downstream 的值。Waterfall 的 next() 让监听者在一次注册中既能观察也能变换。
+    codeRefs:
+      - path: docs/cordis-primer.md
+        note:
+          en: '§ Cordis Waterfall Semantics'
+          zh: '§ Cordis Waterfall 语义'

@@ -1,0 +1,107 @@
+{
+  "versions": [
+    {
+      "id": "v0.1.0-rc.5",
+      "label": "0.1.0-rc.5",
+      "status": "complete",
+      "chapters": [
+        {
+          "id": "ch01-everything-is-a-plugin",
+          "order": 1,
+          "title": {
+            "en": "Everything Is a Plugin",
+            "zh": "一切皆插件"
+          },
+          "summary": {
+            "en": "The Cordis foundation under dsh — there is no privileged core to patch. Plugins contribute services, typed events, and reversible effects to a shared context.",
+            "zh": "dsh 底层的 Cordis 根基——没有需要修补的特权核心。插件向共享上下文贡献服务、类型化事件与可逆副作用。"
+          }
+        },
+        {
+          "id": "ch02-profiles-and-bundles",
+          "order": 2,
+          "title": {
+            "en": "Profiles and Bundles",
+            "zh": "Profile 与 Bundle 组合层"
+          },
+          "summary": {
+            "en": "How a running dsh is composed at boot — ordered layers of bundles, profiles, and patches that turn an empty plugin tree into a product.",
+            "zh": "运行中的 dsh 如何在启动时被组合——bundle、profile 与 patch 的分层，把一个空插件树组装成产品。"
+          }
+        },
+        {
+          "id": "ch03-core-packages",
+          "order": 3,
+          "title": {
+            "en": "Core Packages",
+            "zh": "核心包矩阵"
+          },
+          "summary": {
+            "en": "The packages that own the harness spine — session, tools, agent, agent-loop, system-prompt, llm — and the ctx keys they claim.",
+            "zh": "拥有 harness 主干的服务包——session、tools、agent、agent-loop、system-prompt、llm——以及它们认领的 ctx key。"
+          }
+        },
+        {
+          "id": "ch04-event-domains",
+          "order": 4,
+          "title": {
+            "en": "Event Domains",
+            "zh": "事件三域"
+          },
+          "summary": {
+            "en": "Events are the extension points of dsh — three domains (session, agent, capability) with four dispatch modes, and the rule for picking the right one.",
+            "zh": "事件是 dsh 的扩展点——三个领域（session、agent、capability）四种分发模式，以及挑选正确领域/模式的规则。"
+          }
+        },
+        {
+          "id": "ch05-turn-flow",
+          "order": 5,
+          "title": {
+            "en": "Turn Flow",
+            "zh": "Turn 驱动循环"
+          },
+          "summary": {
+            "en": "How one model request plus its tool calls becomes a step, how steps compose into turns, and where the loop's extension points sit.",
+            "zh": "一次模型请求加上它的工具调用如何成为一个 step，step 如何组成 turn，以及循环的扩展点在哪里。"
+          }
+        },
+        {
+          "id": "ch06-session-log",
+          "order": 6,
+          "title": {
+            "en": "Session Log",
+            "zh": "会话日志"
+          },
+          "summary": {
+            "en": "The log is the source of the context the model sees — and a runtime invariant asserts that anything model-visible is reconstructable from it.",
+            "zh": "日志是模型所见上下文的来源——运行时不变式断言：任何模型可见的内容都能从它重建。"
+          }
+        },
+        {
+          "id": "ch07-capability-seams",
+          "order": 7,
+          "title": {
+            "en": "Capability Seams",
+            "zh": "能力接缝"
+          },
+          "summary": {
+            "en": "A seam is a swappable capability with three roles — Service Definition, Service Provider, Consumer — and why one provider swap changes the whole product.",
+            "zh": "接缝是一种可替换能力，含三个角色——服务定义、服务提供者、消费者——以及为什么一次 provider 替换就能改变整个产品。"
+          }
+        },
+        {
+          "id": "ch08-extension-map",
+          "order": 8,
+          "title": {
+            "en": "Extension Map",
+            "zh": "扩展点地图"
+          },
+          "summary": {
+            "en": "Where new behavior goes — the documented extension points, the register-don't-edit rule, and why locking to a version matters while dsh is in developer preview.",
+            "zh": "新行为放哪里——文档化的扩展点、\"注册而非修改\"规则，以及 developer preview 阶段为什么锁定版本很重要。"
+          }
+        }
+      ]
+    }
+  ]
+}

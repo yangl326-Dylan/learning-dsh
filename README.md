@@ -12,6 +12,24 @@ Versioned, bilingual (EN/ZH) source-code learning pages for [DeepSeek Harness](h
 
 ---
 
+## Screenshots / 界面展示
+
+| 首页（章节卡片 + 版本切换）/ Home | 章节页（左侧导航树 + 正文）/ Chapter |
+|---|---|
+| ![Home](docs/screenshots/home-zh.png) | ![Chapter with sidebar](docs/screenshots/chapter-sidebar-zh.png) |
+
+| 架构图全屏灯箱 / Diagram lightbox | 英文界面 / English UI | 移动端抽屉导航 / Mobile drawer |
+|---|---|---|
+| ![Lightbox](docs/screenshots/lightbox-zh.png) | ![English chapter](docs/screenshots/chapter-sidebar-en.png) | ![Mobile drawer](docs/screenshots/mobile-drawer.png) |
+
+- **章节导航树** — 左侧常驻目录，展开到子章节，点击平滑滚动定位（`scroll-margin` 避开 sticky header） / Persistent sidebar tree with sub-chapter anchors and smooth scroll-to-heading.
+- **架构图灯箱** — 点击图表全屏查看，按 SVG 固有比例自动适配视口，Esc/背景/按钮关闭 / Click a diagram to open a fullscreen lightbox; auto-scales to the viewport, closes via Esc/backdrop/button.
+- **中英双语** — 一键切换 EN/ZH，内容与 UI 同步，locale 记忆 / One-click EN/ZH toggle, content and UI switch together, locale is remembered.
+- **版本化内容** — 版本下拉选择已发布内容版本，正文锁定对应 `sourceRef` / Version dropdown; content locked to its published `sourceRef`.
+- **响应式** — 窄屏下导航树变为抽屉 + backdrop / Sidebar becomes a drawer with backdrop on narrow screens.
+
+---
+
 ## Usage / 使用方式
 
 ### Prerequisites / 前置条件

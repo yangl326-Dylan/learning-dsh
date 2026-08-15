@@ -130,6 +130,14 @@ function staticHandler(dist: string, config: Config) {
         res.writeHead(404).end('not found')
         return
       }
+      // Without a trailing slash the document base drops the prefix, so
+      // relative ./assets URLs resolve against / and hit the web app's
+      // SPA fallback (text/html) instead of this dist. Redirect to the
+      // slash form to keep the base inside the mount path.
+      if (pathname === config.mountPath) {
+        res.writeHead(308, { location: `${config.mountPath}/${url.search}` }).end()
+        return
+      }
       pathname = pathname.slice(config.mountPath.length)
     }
     if (pathname === '') pathname = '/'

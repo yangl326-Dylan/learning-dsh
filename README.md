@@ -42,6 +42,46 @@ Versioned, bilingual (EN/ZH) source-code learning pages for [DeepSeek Harness](h
   cd packages/plugin && npx tsc -p tsconfig.build.json
   ```
 
+### Option 0 — Let an AI agent install it for you / 方式 0：交给 AI agent 自行安装
+
+Prefer to delegate the install? Paste the whole block below as the starting instruction to your AI coding agent (Claude Code, Cursor, …); the agent should clone, build, install and verify on its own. The block is self-contained, so it works even without reading the rest of this README. / 想省事？把下面整段作为起始指令交给你的 AI 编程助手（Claude Code、Cursor 等），让它自行完成克隆、构建、安装与验证。该指令块自包含，不依赖本 README 其余内容。
+
+````markdown
+You are installing the `learning-dsh` plugin into a DeepSeek Harness (dsh) profile.
+
+1. Locate the dsh checkout — the directory where `pnpm dsh ...` works (an installed `dsh` binary also works). Pick the target profile (default `web`); ask the user if ambiguous. Require Node ≥ 22.
+2. Prepare the plugin repo in a scratch directory:
+   ```sh
+   git clone https://github.com/yangl326-Dylan/learning-dsh.git /tmp/learning-dsh
+   cd /tmp/learning-dsh && pnpm install
+   ```
+3. Build content, frontend and plugin, in this order:
+   ```sh
+   npx tsx scripts/build-content.ts                  # content JSON -> packages/web/public/data
+   cd packages/web && npx vite build                 # frontend dist
+   cd ../plugin && npx tsc -p tsconfig.build.json    # plugin lib
+   ```
+4. Install into the profile:
+   ```sh
+   pnpm dsh plugin --profile <profile> add /tmp/learning-dsh/packages/plugin
+   ```
+5. Verify the composed config without booting — expect a `# == @dylan/learning-dsh` layer:
+   ```sh
+   pnpm dsh --profile <profile> --dump-config
+   ```
+6. Boot a fresh instance and confirm the learning page answers with HTTP 200:
+   ```sh
+   pnpm dsh --profile <profile> --port 3080
+   curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3080/learning/
+   ```
+7. If the user prefers no profile change, skip steps 4–5 and load the ready overlay instead:
+   ```sh
+   pnpm dsh --profile <profile> --patch /tmp/learning-dsh/scripts/learning-dsh.patch.yml --port 3099
+   ```
+
+Keep the monorepo `node_modules` of the checkout intact — the plugin locates the frontend dist via `require.resolve('@learning-dsh/web')`. Don't move or delete `/tmp/learning-dsh` afterwards without telling the user. Report the profile used, the verified URL, and any step that failed; leave the environment (running instance, scratch dir) as the user prefers.
+````
+
 ### Option A — Install as a bundle (recommended) / 方式 A：作为 bundle 安装（推荐）
 
 The plugin package ships a `dsh.bundle` layer (`cordis.patch.yml`), so it installs into a profile exactly like any other dsh bundle. From the dsh source tree / 插件包自带 `dsh.bundle` 配置层（`cordis.patch.yml`），可与任意 dsh bundle 一样安装进 profile。在 dsh 源码树下执行：
